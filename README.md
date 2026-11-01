@@ -12,7 +12,12 @@ The Android app is in `app/`. It is designed to be selectable as the device's Ho
 - Custom wallpaper selected by the user.
 - First-run welcome/setup screen.
 - Redesigned home screen with app tiles, search, and a separate customization page.
-- Four accent color choices, 3–6 app grid columns, and app-label visibility setting.
+- Futuristic liquid-glass visual system with layered translucent panels and a redesigned app icon.
+- Four-step first-run setup for the welcome experience, accent palette, gallery wallpaper, and default Home selection.
+- Home screen with clock/date, spotlight card, search, pinned-app dock, app library, control center, and subtle “made by hacer62828” signature.
+- Expanded customization studio: eight accent colors, glass toggle, app grid (3–6 columns), icon sizing, text scaling, app labels, clock, search, wallpaper selection/removal, hidden apps, and layout reset.
+- App library with search, app launching, long-press pin/hide/app-info actions, and persistent preferences.
+- Kernel Lab showing the device's actual Android version, kernel version, CPU ABI and model, plus an explanation of the separate experimental Anonixex kernel.
 - No advertisements, analytics SDK, account system, or network permission.
 
 The app deliberately does not request unrestricted access to the phone. Android apps run in a permission sandbox; a launcher can show and start launchable apps, but it cannot silently control every app, read private app data, or change protected system settings. Features that need access to user data must use Android's permission prompts and system pickers.
