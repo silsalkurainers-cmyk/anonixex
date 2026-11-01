@@ -176,6 +176,8 @@ class MainActivity : Activity() {
                 body.addView(glassCard().apply {
                     addView(label("Set Anonixex as your default Home app to use it when you press Home. You can do this later in Settings.", 14f, muted, false))
                     addView(actionButton("Choose default Home app", glassBright, white) { requestHomeRole() })
+                    addView(actionButton("Set Dynamic Island app", glass, white) { configureIsland() })
+                    addView(actionButton("Set Dynamic Island link", glass, white) { configureIslandLink() })
                 })
             }
         }
@@ -334,7 +336,7 @@ class MainActivity : Activity() {
             .setItems(names) { _, which ->
                 prefs.edit().putString("island_app", packages[which]).apply()
                 configureIslandLink()
-            }.setNeutralButton("No app", null).setNegativeButton("Cancel", null).show()
+            }.setNeutralButton("Clear app") { _, _ -> prefs.edit().remove("island_app").apply() }.setNegativeButton("Cancel", null).show()
     }
 
     private fun configureIslandLink() {
@@ -364,7 +366,7 @@ class MainActivity : Activity() {
         page.addView(input, LinearLayout.LayoutParams(-1, dp(52)).apply { topMargin = dp(10) })
         page.addView(actionButton("Run command", accent, bg) {
             val raw = input.text.toString().trim()
-            if (raw.isNotBlank()) { output.append("\nanonixex $ " + raw + "\n"); output.append(runAnonixexCommand(raw)); output.append("\n"); input.setText(""); scroll.post { scroll.fullScroll(View.FOCUS_DOWN) } }
+            if (raw.isNotBlank()) { if (raw == "clear") { output.text = "" } else { output.append("\nanonixex $ " + raw + "\n"); output.append(runAnonixexCommand(raw)); output.append("\n") }; input.setText(""); scroll.post { scroll.fullScroll(View.FOCUS_DOWN) } }
         })
         page.addView(label("Commands run inside Anonixex only; arbitrary host shell commands are not executed.", 10f, muted, false))
         page.addView(actionButton("Back to Studio", glassBright, white) { showSettings() })
