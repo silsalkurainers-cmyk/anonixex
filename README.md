@@ -1,41 +1,76 @@
 # Anonixex
 
-Anonixex is being developed in two stages: first a customizable Android launcher APK, then an original phone operating system and kernel. The launcher is the first usable product and the future OS will grow from its interface and app experience. The current Android launcher is not yet a standalone operating system.
+Anonixex is being developed in stages: customizable apps first, followed by an original phone operating system and kernel. The current Android and desktop apps are usable interface prototypes, not a standalone OS.
 
-## Anonixex Launcher (early prototype)
+## Downloads
 
-The Android app is in `app/`. It is designed to be selectable as the device's Home app and currently includes:
+The GitHub Releases page publishes both builds together:
 
-- App drawer populated from apps that expose Android launcher activities.
-- App search and one-tap app launching.
-- Long-press an app to open its Android app-info page.
-- Custom wallpaper selected by the user.
-- First-run welcome/setup screen.
-- Redesigned home screen with app tiles, search, and a separate customization page.
-- Futuristic liquid-glass visual system with layered translucent panels and a redesigned app icon.
-- Four-step first-run setup for the welcome experience, accent palette, gallery wallpaper, and default Home selection.
-- Home screen with clock/date, spotlight card, search, pinned-app dock, app library, control center, and subtle “made by hacer62828” signature.
-- Expanded customization studio: eight accent colors, glass toggle, app grid (3–6 columns), icon sizing, text scaling, app labels, clock, search, wallpaper selection/removal, hidden apps, and layout reset.
-- App library with search, app launching, long-press pin/hide/app-info actions, and persistent preferences.
-- Kernel Lab showing the device's actual Android version, kernel version, CPU ABI and model, plus an explanation of the separate experimental Anonixex kernel.
-- No advertisements, analytics SDK, account system, or network permission.
+- **Android:** `Anonixex-Launcher.apk` — native Android launcher.
+- **Windows x64:** `Anonixex-Desktop-0.1.0-x64.exe` — portable 64-bit Windows desktop companion.
 
-The app deliberately does not request unrestricted access to the phone. Android apps run in a permission sandbox; a launcher can show and start launchable apps, but it cannot silently control every app, read private app data, or change protected system settings. Features that need access to user data must use Android's permission prompts and system pickers.
+The Windows build is currently for 64-bit Windows 10/11 PCs. It is a separate desktop application and does not replace Windows. It does not require administrator access to run.
 
-### Build the APK
+## Android launcher
 
-GitHub Actions builds the Android APK on pushes that change the app and publishes the raw `Anonixex-Launcher.apk` file as a GitHub Release asset. Download the `.apk` directly from the Releases page; the separate Actions artifact is ZIP-wrapped by GitHub.
+The native Android app is in `app/` and includes:
 
-## Future OS installer and storage footprint
+- App drawer, search, app launching, pin/hide actions and app information.
+- Custom gallery wallpaper and a four-step first-run setup.
+- Liquid-glass inspired interface, clock, spotlight card and pinned dock.
+- Eight accent colors, glass toggle, grid sizing, icon sizing, text scaling, labels, clock and search controls.
+- Control Center shortcuts to Android settings.
+- Kernel Lab showing the actual Android version, kernel version, CPU ABI and device model.
+- No advertisements, analytics SDK, account system or internet permission.
 
-A genuine phone OS installer and a 15 GB system image are not available yet. The current kernel code only compiles small target objects; it is not a bootable operating system. The launcher now has a first-run setup screen, but that is not a firmware/OS installer. A real installer requires a bootable image, supported device hardware, verified boot and partition handling, drivers, and a tested recovery path. The project will not pad the download to 15 GB just to hit a size target; storage use should come from real OS components and optional apps, not fake bulk.
+Android apps run in a permission sandbox. An ordinary launcher cannot silently control every app, read private app data or change protected system settings.
+
+## Windows desktop companion
+
+The Electron app is in `desktop/` and includes:
+
+- Four-step welcome/setup experience.
+- Futuristic dark liquid-glass home screen, clock/date, spotlight and navigation.
+- Windows Start Menu shortcut discovery, app search and app launching.
+- Pinned apps and hidden-app management.
+- Gallery/file-picker wallpaper selection.
+- Eight accent colors, glass toggle, app labels, clock/search toggles, icon sizing, text scaling and app-grid sizing.
+- Control Center shortcuts that open the corresponding Windows Settings pages.
+- Kernel Lab displaying Windows kernel release, CPU architecture/model, core count, memory and hostname.
+- Local preferences stored on the PC; no ads, analytics, account system or app network service.
+
+The Windows version reads Start Menu shortcuts rather than scanning private application data. Windows may still apply its normal permissions when an app is launched.
+
+### Run the desktop app from source
+
+Install Node.js 22 or newer, then:
+
+```bash
+cd desktop
+npm install
+npm start
+```
+
+### Build the portable Windows x64 executable
+
+```bash
+cd desktop
+npm install
+npm run dist:win
+```
+
+The executable is written to `desktop/dist/`.
+
+## Build and releases
+
+GitHub Actions builds the Android APK and the Windows x64 portable executable in parallel. A release is published only after both builds succeed, and includes both files. The Android APK is retained; the desktop build is an additional download.
 
 ## Original Anonixex kernel
 
-The separate `src/` and `arch/` code is the early original-kernel compilation prototype. ARMv7-A (32-bit) and AArch64 (64-bit) are the primary phone CPU targets; x86 and x86_64 are optional development targets.
+The separate `src/` and `arch/` code is an early original-kernel compilation prototype. ARMv7-A (32-bit) and AArch64 (64-bit) are the primary phone CPU targets; x86 and x86_64 are optional development targets.
 
-These kernel targets currently compile object files only. They are not bootable phone images and are not used by the Android launcher APK. A real phone OS still needs a boot chain, memory management, process scheduling, graphics, input, storage, networking, power management, and device-specific drivers.
+These kernel targets currently compile object files only. They are not bootable phone or PC images and are not used by either launcher app. A real OS still needs a boot chain, memory management, process scheduling, graphics, input, storage, networking, power management and device-specific drivers.
 
 ## Development safety
 
-Use the launcher as a normal Android app. Do not flash the experimental kernel to a daily-use phone. Kernel bring-up should begin in an emulator or on a spare development device with a documented recovery path.
+Use the Android launcher as a normal app and the Windows build as a desktop application. Do not flash the experimental kernel to a daily-use phone or PC. Kernel bring-up should begin in an emulator or on a spare development device with a documented recovery path.
