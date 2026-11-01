@@ -1,49 +1,47 @@
 # Anonixex
 
-Anonixex is being developed in stages: customizable apps first, followed by an original phone operating system and kernel. The current Android and desktop apps are usable interface prototypes, not a standalone OS.
+Anonixex is a phone-first launcher and an early-stage original OS/kernel research project. The Android app is the main experience. The Windows companion is a beta preview for testing the shared phone-style interface.
 
-## Downloads
+## Releases
 
-The GitHub Releases page publishes both builds together:
+GitHub Releases contains:
+- **Android APK:** the primary native Android launcher.
+- **Windows x64 BETA:** experimental portable companion for Windows 10/11 64-bit PCs. It is for testing only and is not a standalone OS.
 
-- **Android:** `Anonixex-Launcher.apk` — native Android launcher.
-- **Windows x64:** `Anonixex-Desktop-0.1.0-x64.exe` — portable 64-bit Windows desktop companion.
-
-The Windows build is currently for 64-bit Windows 10/11 PCs. It is a separate desktop application and does not replace Windows. It does not require administrator access to run.
+The release workflow keeps the APK and publishes the Windows executable as a prerelease/beta asset. Existing Android APK releases are not deleted.
 
 ## Android launcher
 
-The native Android app is in `app/` and includes:
+The native Android app in `app/` includes:
+- Android app discovery, app launching, search, pinning, hiding and app information.
+- Gallery wallpaper picker and first-run setup.
+- Dark, translucent glass-inspired surfaces with accent palette, glass opacity and corner-roundness controls.
+- Grid columns, icon size, text scaling, labels, clock and search customization.
+- Dynamic Island-style pill. Double-tap it to expand or collapse its quick-action panel.
+- Configure an installed app and an HTTP/HTTPS bookmark as Dynamic Island shortcuts.
+- Swipe upward from the lower part of the home screen to open the app library.
+- Anonixex Terminal with a limited built-in command environment.
+- Control Center links to Android system settings.
+- No ads, analytics SDK, account system or internet permission.
 
-- App drawer, search, app launching, pin/hide actions and app information.
-- Custom gallery wallpaper and a four-step first-run setup.
-- Liquid-glass inspired interface, clock, spotlight card and pinned dock.
-- Eight accent colors, glass toggle, grid sizing, icon sizing, text scaling, labels, clock and search controls.
-- Control Center shortcuts to Android settings.
-- Kernel Lab showing the actual Android version, kernel version, CPU ABI and device model.
-- No advertisements, analytics SDK, account system or internet permission.
+The terminal supports app-specific commands such as `help`, `neofetch`, `uname`, `date`, `uptime`, `apps`, `open <name>`, `theme list`, `theme <color>`, `wallpaper`, `settings`, `about`, `ls`, `pwd`, `whoami`, `free`, `lscpu`, and `pkg list`. These commands operate on Anonixex features; they do not execute arbitrary Linux or Android shell commands.
 
-Android apps run in a permission sandbox. An ordinary launcher cannot silently control every app, read private app data or change protected system settings.
+## Windows x64 beta companion
 
-## Windows desktop companion
+The Electron app in `desktop/` is a phone-shaped preview designed to test the same visual direction:
+- Portrait phone-like frame, rounded edges, translucent layered glass and configurable blur/opacity.
+- Dynamic Island that expands/collapses on double-click, with a pinned Windows shortcut and saved HTTP/HTTPS link.
+- Swipe-up gesture for the app library, app search and Start Menu shortcut launching.
+- Setup, wallpaper picker, eight accent colours and Studio customization.
+- Grid columns, icon size, text scale, panel roundness, glass strength, blur and opacity.
+- Arch-inspired Anonixex terminal commands running inside the app's own command interpreter.
+- Windows Settings shortcuts.
 
-The Electron app is in `desktop/` and includes:
+The Windows build is explicitly beta software. It does not replace Windows, install a kernel, or execute Arch Linux commands on the Windows host. It reads Start Menu/Desktop shortcuts rather than scanning private application data. No ads, analytics or account system are included.
 
-- Four-step welcome/setup experience.
-- Futuristic dark liquid-glass home screen, clock/date, spotlight and navigation.
-- Windows Start Menu shortcut discovery, app search and app launching.
-- Pinned apps and hidden-app management.
-- Gallery/file-picker wallpaper selection.
-- Eight accent colors, glass toggle, app labels, clock/search toggles, icon sizing, text scaling and app-grid sizing.
-- Control Center shortcuts that open the corresponding Windows Settings pages.
-- Kernel Lab displaying Windows kernel release, CPU architecture/model, core count, memory and hostname.
-- Local preferences stored on the PC; no ads, analytics, account system or app network service.
+### Run from source
 
-The Windows version reads Start Menu shortcuts rather than scanning private application data. Windows may still apply its normal permissions when an app is launched.
-
-### Run the desktop app from source
-
-Install Node.js 22 or newer, then:
+Install Node.js 22 or newer:
 
 ```bash
 cd desktop
@@ -51,7 +49,7 @@ npm install
 npm start
 ```
 
-### Build the portable Windows x64 executable
+### Build the portable Windows x64 beta
 
 ```bash
 cd desktop
@@ -61,16 +59,10 @@ npm run dist:win
 
 The executable is written to `desktop/dist/`.
 
-## Build and releases
+## Kernel and runtime clarification
 
-GitHub Actions builds the Android APK and the Windows x64 portable executable in parallel. A release is published only after both builds succeed, and includes both files. The Android APK is retained; the desktop build is an additional download.
+A normal Android or Windows app cannot install its own hardware kernel while it is running as an application. Android apps run on the device's existing Linux kernel; Windows apps run on the Windows NT kernel. Anonixex Terminal is a built-in command environment for launcher operations, not a complete Arch Linux shell.
 
-## Original Anonixex kernel
+The separate `src/` and `arch/` directories contain an early original-kernel compilation prototype. ARMv7-A and AArch64 are the primary phone targets; x86 and x86_64 are optional development targets. The prototype currently compiles object files only and is not a bootable OS image. A real OS needs a boot chain, memory management, scheduling, graphics, input, storage, networking, power management and device-specific drivers.
 
-The separate `src/` and `arch/` code is an early original-kernel compilation prototype. ARMv7-A (32-bit) and AArch64 (64-bit) are the primary phone CPU targets; x86 and x86_64 are optional development targets.
-
-These kernel targets currently compile object files only. They are not bootable phone or PC images and are not used by either launcher app. A real OS still needs a boot chain, memory management, process scheduling, graphics, input, storage, networking, power management and device-specific drivers.
-
-## Development safety
-
-Use the Android launcher as a normal app and the Windows build as a desktop application. Do not flash the experimental kernel to a daily-use phone or PC. Kernel bring-up should begin in an emulator or on a spare development device with a documented recovery path.
+Use the Android app as a normal launcher and the Windows app as a beta companion. Do not flash experimental kernel code to a daily-use device.
