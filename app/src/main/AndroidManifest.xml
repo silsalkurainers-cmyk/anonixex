@@ -7,6 +7,7 @@
     </queries>
     <application
         android:allowBackup="false"
+        android:icon="@drawable/ic_anonixex"
         android:label="Anonixex"
         android:theme="@style/AnonixexTheme"
         android:usesCleartextTraffic="false">
