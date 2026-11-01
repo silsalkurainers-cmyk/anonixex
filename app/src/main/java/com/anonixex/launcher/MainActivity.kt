@@ -52,6 +52,8 @@ class MainActivity : Activity() {
         accent = accents[prefs.getInt("accent", 0).coerceIn(accents.indices)]
         columns = prefs.getInt("columns", 4).coerceIn(3, 6)
         showLabels = prefs.getBoolean("labels", true)
+        favorites = prefs.getStringSet("favorites", emptySet())?.toMutableSet() ?: mutableSetOf()
+        hiddenApps = prefs.getStringSet("hidden_apps", emptySet())?.toMutableSet() ?: mutableSetOf()
         showClock = prefs.getBoolean("show_clock", true)
         iconSize = prefs.getInt("icon_size", 43).coerceIn(32, 64)
         favorites = prefs.getStringSet("favorites", emptySet())?.toMutableSet() ?: mutableSetOf()
