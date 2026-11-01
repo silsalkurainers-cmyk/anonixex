@@ -38,7 +38,7 @@
       ]
     },
     "portable": {
-      "artifactName": "Anonixex-Desktop-${version}-x64.exe"
+      "artifactName": "Anonixex-Desktop-BETA-${version}-x64.exe"
     }
   }
 }
