@@ -1,39 +1,40 @@
 # Anonixex
 
-**Anonixex is an original operating-system and kernel project.** The long-term
-goal is a portable OS for phones and computers, with architecture support for
-32-bit and 64-bit processors.
+Anonixex is an original operating-system and kernel project. Its primary
+product goal is a phone OS with its own kernel, not an Android/Linux
+distribution. Desktop/PC targets are optional development targets.
 
-## Current status
+## CPU targets
 
-The first source milestone is a freestanding x86_64 kernel entry that writes
-diagnostic text to the serial port and halts safely. It is not yet a complete
-operating system and does not yet boot on a phone.
-
-The initial build uses the Limine boot protocol as a temporary bootloader
-interface. Limine is not the Anonixex kernel; the kernel source is our own.
+| Target | Purpose | Status |
+| --- | --- | --- |
+| ARMv7-A (32-bit) | Older 32-bit phones and ARM development boards | Compile prototype |
+| AArch64 (64-bit) | Modern 64-bit phones and ARM development boards | Compile prototype |
+| x86 (32-bit) | Optional PC/emulator development | Compile prototype |
+| x86_64 (64-bit) | Optional PC/emulator development | Compile prototype |
 
 ## Build
 
-The x86_64 kernel can be compiled with:
+Install Clang and Make, then run:
 
 ```sh
-make
+make phone
 ```
 
-The output is `build/anonixex-kernel.elf`. GitHub Actions runs this build on
-pushes to `main` and on pull requests.
+This compiles the common freestanding kernel entry for both ARM phone CPU
+architectures. To compile all four CPU targets, run `make phone pc`.
 
-## Architecture roadmap
+GitHub Actions compiles each target separately and uploads its object file.
 
-- x86_64: initial freestanding build
-- x86 32-bit: planned
-- ARM32 / AArch32: planned
-- ARM64 / AArch64: planned
+## Important current limitations
 
-## Important
+These are architecture compile prototypes, not bootable phone images. They
+do not yet initialize a phone, display a screen, use touch, access cellular
+modems, Wi-Fi, cameras, storage, or battery management. A real phone port also
+needs a supported device's boot chain, memory map/device tree, interrupt
+controller, timers, display and input drivers, storage drivers, and power
+management. Each phone model has different hardware and firmware requirements.
 
-A successful compile is not proof that the kernel boots correctly. The next
-milestone is to package it with a bootloader, run it in an emulator, and verify
-the serial output before adding memory management, interrupts, scheduling,
-drivers, and userspace.
+The kernel is original project code. A bootloader or firmware interface may
+be used to transfer control to it; that does not make the kernel Android or
+Linux-based.
