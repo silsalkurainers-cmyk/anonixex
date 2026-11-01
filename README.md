@@ -1,6 +1,6 @@
 # Anonixex
 
-Anonixex is being developed in two stages: first a customizable Android launcher APK, then an original phone operating system and kernel. The launcher is the first usable product and the future OS will grow from its interface and app experience.
+Anonixex is being developed in two stages: first a customizable Android launcher APK, then an original phone operating system and kernel. The launcher is the first usable product and the future OS will grow from its interface and app experience. The current Android launcher is not yet a standalone operating system.
 
 ## Anonixex Launcher (early prototype)
 
@@ -10,6 +10,8 @@ The Android app is in `app/`. It is designed to be selectable as the device's Ho
 - App search and one-tap app launching.
 - Long-press an app to open its Android app-info page.
 - Custom wallpaper selected by the user.
+- First-run welcome/setup screen.
+- Redesigned home screen with app tiles, search, and a separate customization page.
 - Four accent color choices, 3–6 app grid columns, and app-label visibility setting.
 - No advertisements, analytics SDK, account system, or network permission.
 
@@ -17,7 +19,11 @@ The app deliberately does not request unrestricted access to the phone. Android 
 
 ### Build the APK
 
-GitHub Actions builds a debug APK on pushes that change the Android app. Open the **Build Anonixex Android APK** workflow, select the successful run, and download the `anonixex-launcher-debug` artifact. The APK is named `app-debug.apk`.
+GitHub Actions builds the Android APK on pushes that change the app and publishes the raw `Anonixex-Launcher.apk` file as a GitHub Release asset. Download the `.apk` directly from the Releases page; the separate Actions artifact is ZIP-wrapped by GitHub.
+
+## Future OS installer and storage footprint
+
+A genuine phone OS installer and a 15 GB system image are not available yet. The current kernel code only compiles small target objects; it is not a bootable operating system. The launcher now has a first-run setup screen, but that is not a firmware/OS installer. A real installer requires a bootable image, supported device hardware, verified boot and partition handling, drivers, and a tested recovery path. The project will not pad the download to 15 GB just to hit a size target; storage use should come from real OS components and optional apps, not fake bulk.
 
 ## Original Anonixex kernel
 
