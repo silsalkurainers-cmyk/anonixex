@@ -616,7 +616,8 @@ class MainActivity : Activity() {
                     buildHome()
                 }.show()
         })
-        privacy.addView(actionButton("Configure Dynamic Island", glassBright, white) { configureIsland() })
+        privacy.addView(actionButton("Choose Dynamic Island app", glassBright, white) { configureIsland() })
+        privacy.addView(actionButton("Set Dynamic Island link", glass, white) { configureIslandLink() })
         privacy.addView(actionButton("Open Anonixex Terminal", glassBright, white) { showTerminal() })
         settings.addView(privacy, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
