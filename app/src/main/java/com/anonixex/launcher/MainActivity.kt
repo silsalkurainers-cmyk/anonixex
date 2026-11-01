@@ -23,7 +23,6 @@ import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : Activity() {
     private val prefs by lazy { getSharedPreferences("anonixex", MODE_PRIVATE) }
