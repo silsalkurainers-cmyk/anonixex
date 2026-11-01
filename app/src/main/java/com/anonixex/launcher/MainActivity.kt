@@ -315,6 +315,58 @@ class MainActivity : Activity() {
         }
     }
 
+
+    private fun showAppActions(app: Launchable) {
+        val options = arrayOf(
+            if (app.packageName in favorites) "Remove from favorites" else "Add to favorites",
+            if (app.packageName in hiddenApps) "Show app" else "Hide app",
+            "App information"
+        )
+        AlertDialog.Builder(this).setTitle(app.title).setItems(options) { _, which ->
+            when (which) {
+                0 -> {
+                    if (!favorites.add(app.packageName)) favorites.remove(app.packageName)
+                    prefs.edit().putStringSet("favorites", favorites.toSet()).apply()
+                    buildHome()
+                }
+                1 -> {
+                    if (!hiddenApps.add(app.packageName)) hiddenApps.remove(app.packageName)
+                    prefs.edit().putStringSet("hidden_apps", hiddenApps.toSet()).apply()
+                    buildHome()
+                }
+                2 -> startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + app.packageName)))
+            }
+        }.show()
+    }
+
+    private fun showQuickPanel() {
+        val page = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(22), dp(30), dp(22), dp(22))
+            setBackgroundColor(bg)
+        }
+        page.addView(label("ANONIXEX CONTROL", 11f, accent, true))
+        page.addView(label("Quick access", 30f, white, true).apply { setPadding(0, dp(4), 0, dp(18)) })
+        page.addView(TextClock(this).apply {
+            format12Hour = "h:mm  ·  EEEE, d MMMM"
+            format24Hour = "HH:mm  ·  EEEE, d MMMM"
+            textSize = 17f
+            setTextColor(muted)
+        })
+        val controls = card()
+        controls.addView(label("DEVICE SETTINGS", 10f, accent, true))
+        controls.addView(actionButton("Wi-Fi and network", panel2, white) { startActivity(Intent(Settings.ACTION_WIFI_SETTINGS)) })
+        controls.addView(actionButton("Bluetooth", panel2, white) { startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) })
+        controls.addView(actionButton("Display", panel2, white) { startActivity(Intent(Settings.ACTION_DISPLAY_SETTINGS)) })
+        controls.addView(actionButton("Sound and Do Not Disturb", panel2, white) { startActivity(Intent(Settings.ACTION_SOUND_SETTINGS)) })
+        controls.addView(actionButton("Location", panel2, white) { startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) })
+        controls.addView(actionButton("Battery", panel2, white) { startActivity(Intent(Intent.ACTION_POWER_USAGE_SUMMARY)) })
+        controls.addView(actionButton("Notifications", panel2, white) { startActivity(Intent("android.settings.NOTIFICATION_SETTINGS")) })
+        page.addView(controls, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(20) })
+        page.addView(actionButton("Back to home", accent, bg) { buildHome() }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
+        setContentView(page)
+    }
+
     private fun card() = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
         setPadding(dp(17), dp(17), dp(17), dp(17))
