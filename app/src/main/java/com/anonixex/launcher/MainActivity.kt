@@ -828,7 +828,7 @@ class MainActivity : Activity() {
             GradientDrawable.Orientation.TL_BR,
             intArrayOf(fill, Color.argb(190, 21, 27, 40))
         ).apply {
-            cornerRadius = dp(cornerRadius).toFloat()
+            cornerRadius = dp(this@MainActivity.cornerRadius).toFloat()
             setStroke(dp(1), Color.argb(if (glassMode) 145 else 35, 220, 236, 255))
         }
     }
