@@ -45,13 +45,16 @@ jobs:
       - name: Build Android APK
         run: gradle --no-daemon :app:assembleDebug
 
+      - name: Name APK for release
+        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/Anonixex-Launcher.apk
+
       # GitHub Actions artifacts are always ZIP-wrapped. This is only a backup;
       # the GitHub Release below publishes the raw .apk as a direct download.
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: anonixex-launcher-build
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/Anonixex-Launcher.apk
           if-no-files-found: error
 
       - name: Publish APK release
@@ -67,5 +70,5 @@ jobs:
 
             This is an early-access debug build. It is not the Anonixex operating system yet.
           prerelease: false
-          files: app/build/outputs/apk/debug/app-debug.apk
+          files: app/build/outputs/apk/debug/Anonixex-Launcher.apk
           overwrite_files: true
