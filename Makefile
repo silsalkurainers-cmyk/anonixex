@@ -1,28 +1,37 @@
 CC := clang
-LD := ld.lld
-
 BUILD_DIR := build
-KERNEL := $(BUILD_DIR)/anonixex-kernel.elf
-OBJECTS := $(BUILD_DIR)/kernel.o
 
-CFLAGS := --target=x86_64-unknown-none-elf \
-          -std=c11 -O2 -Wall -Wextra -Werror \
-          -ffreestanding -fno-builtin -fno-stack-protector \
-          -fno-pic -fno-pie -mno-red-zone -mcmodel=kernel
+COMMON_CFLAGS := -std=c11 -O2 -Wall -Wextra -Werror \
+                 -ffreestanding -fno-builtin -fno-stack-protector \
+                 -fno-pic -fno-pie
 
-LDFLAGS := -nostdlib -static -z max-page-size=0x1000 -T linker.ld
+.PHONY: all phone phone32 phone64 pc pc32 pc64 clean
 
-.PHONY: all clean
-all: $(KERNEL)
+# The phone targets are ARM. 32-bit ARM and 64-bit ARM are separate builds.
+all: phone
+
+phone: phone32 phone64
+phone32: $(BUILD_DIR)/anonixex-arm32.o
+phone64: $(BUILD_DIR)/anonixex-arm64.o
+
+pc: pc32 pc64
+pc32: $(BUILD_DIR)/anonixex-x86.o
+pc64: $(BUILD_DIR)/anonixex-x86_64.o
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-$(BUILD_DIR)/kernel.o: src/kernel.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(BUILD_DIR)/anonixex-arm32.o: src/kernel.c | $(BUILD_DIR)
+	$(CC) --target=armv7a-none-eabi $(COMMON_CFLAGS) -mcpu=cortex-a7 -c $< -o $@
 
-$(KERNEL): $(OBJECTS) linker.ld
-	$(LD) $(LDFLAGS) -o $@ $(OBJECTS)
+$(BUILD_DIR)/anonixex-arm64.o: src/kernel.c | $(BUILD_DIR)
+	$(CC) --target=aarch64-none-elf $(COMMON_CFLAGS) -mcpu=cortex-a53 -c $< -o $@
+
+$(BUILD_DIR)/anonixex-x86.o: src/kernel.c | $(BUILD_DIR)
+	$(CC) --target=i386-unknown-none-elf $(COMMON_CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/anonixex-x86_64.o: src/kernel.c | $(BUILD_DIR)
+	$(CC) --target=x86_64-unknown-none-elf $(COMMON_CFLAGS) -mno-red-zone -mcmodel=kernel -c $< -o $@
 
 clean:
 	rm -rf $(BUILD_DIR)
