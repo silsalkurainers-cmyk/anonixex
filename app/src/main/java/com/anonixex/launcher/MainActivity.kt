@@ -22,7 +22,6 @@ import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : Activity() {
     private val prefs by lazy { getSharedPreferences("anonixex", MODE_PRIVATE) }
@@ -235,7 +234,7 @@ class MainActivity : Activity() {
                 type = "image/*"
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
             }
-            wallpaperPicker.launch(pick)
+            startActivityForResult(pick, WALLPAPER_REQUEST)
         })
         box.addView(actionButton("Set as default home app") {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -271,7 +270,7 @@ class MainActivity : Activity() {
         try {
             contentResolver.openInputStream(uri)?.use { stream ->
                 val bitmap = BitmapFactory.decodeStream(stream) ?: return
-                root.background = android.graphics.drawable.BitmapDrawable(resources, bitmap).apply { gravity = Gravity.CENTER_CROP }
+                root.background = android.graphics.drawable.BitmapDrawable(resources, bitmap).apply { gravity = Gravity.CENTER }
             }
         } catch (_: Exception) {
             Toast.makeText(this, "Wallpaper unavailable", Toast.LENGTH_SHORT).show()
