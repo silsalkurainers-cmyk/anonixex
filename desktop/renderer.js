@@ -9,7 +9,7 @@ const nav=x=>'<nav class="bottom-nav">'+["home","apps","studio"].map(p=>'<button
 const tile=a=>'<button class="app-tile" data-launch="'+esc(a.path)+'"><span class="app-icon">'+esc(a.name[0].toUpperCase())+'</span>'+(s.labels?'<span class="app-name">'+esc(a.name)+'</span>':"")+'</button>';
 const head=(t,d)=>'<header class="topbar"><div><div class="brand">A N O N I X E X</div><h1>'+t+'</h1><p>'+d+'</p></div><div class="top-actions">'+btn("◉","control")+btn("⚙","studio")+'</div></header>';
 function render(){
- document.documentElement.style.setProperty("--accent",colors[s.accent]);document.documentElement.style.setProperty("--icon-size",s.iconSize+"px");document.documentElement.style.setProperty("--text-scale",s.textScale/100);document.body.classList.toggle("flat",!s.glass);
+ document.documentElement.style.setProperty("--accent",colors[s.accent]);document.documentElement.style.setProperty("--icon-size",s.iconSize+"px");document.documentElement.style.setProperty("--columns",s.columns);document.documentElement.style.setProperty("--text-scale",s.textScale/100);document.body.classList.toggle("flat",!s.glass);
  let bg=s.wallpaper?'background-image:linear-gradient(120deg,#050912c9,#050912df),url("'+s.wallpaper+'")':"";
  let content=page==="setup"?setup():page==="home"?home():page==="apps"?library():page==="studio"?studio():page==="control"?control():kernel();
  $("#app").innerHTML='<main class="shell" style="'+bg+'">'+content+'</main>';
@@ -25,7 +25,7 @@ function setup(){
  return '<div class="setup-wrap"><div class="brand">A N O N I X E X <span>DESKTOP</span></div><div class="setup-progress">'+[0,1,2,3].map(i=>'<i class="'+(i<=step?"done":"")+'"></i>').join("")+'</div>'+parts[step]+'<div class="setup-actions">'+(step?btn("Back","back"):"")+btn(step===3?"Enter Anonixex":"Continue","next","primary")+'</div><div class="signature">made by hacer62828</div></div>';
 }
 function home(){
- let fav=s.favorites.map(p=>apps.find(a=>a.path===p)).filter(Boolean),recent=apps.filter(a=>!s.hidden.includes(a.path)).slice(0,8);
+ let fav=s.favorites.map(p=>apps.find(a=>a.path===p)).filter(Boolean),recent=apps.filter(a=>!s.hidden.includes(a.path)&&a.name.toLowerCase().includes(query.toLowerCase())).slice(0,8);
  return '<div class="content">'+head("Good to see you.","Your desktop, reimagined around you.")+(s.clock?card('<div class="clock" id="clock">--:--</div><div class="date" id="date"></div>'):"")+'<div class="spotlight"><div class="eyebrow">PERSONAL SPACE / 001</div><h2>Everything,<br>in its own orbit.</h2><p>A little more you. A little less ordinary.</p><div class="orb"></div></div>'+(s.search?searchBox("home-search"):"")+'<div class="section-head"><span>PINNED</span><small>Quick launch</small></div><div class="favorite-row">'+(fav.map(tile).join("")||'<div class="empty">Pin your favourite apps from the App Library.</div>')+'</div><div class="section-head"><span>APP LIBRARY</span><button data-page="apps">All apps ↗</button></div><div class="app-grid">'+(recent.map(tile).join("")||'<div class="empty">No Start Menu shortcuts found yet.</div>')+'</div><div class="signature">made by hacer62828</div></div>'+nav("home");
 }
 function searchBox(id){return '<div class="searchbox"><span>⌕</span><input id="'+id+'" placeholder="Search apps" value="'+esc(query)+'"></div>';}
