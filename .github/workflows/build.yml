@@ -1,0 +1,38 @@
+name: Build Anonixex kernel
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-x86_64:
+    name: Build x86_64 kernel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install compiler and linker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld make
+
+      - name: Compile kernel
+        run: make
+
+      - name: Verify kernel ELF
+        run: |
+          file build/anonixex-kernel.elf
+          llvm-readelf -h build/anonixex-kernel.elf
+
+      - name: Upload kernel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anonixex-kernel-x86_64
+          path: build/anonixex-kernel.elf
+          if-no-files-found: error
