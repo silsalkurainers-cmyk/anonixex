@@ -1,6 +1,7 @@
 package com.anonixex.launcher
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.role.RoleManager
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -22,6 +23,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.TextClock
 import android.widget.Toast
 
 class MainActivity : Activity() {
@@ -35,6 +37,10 @@ class MainActivity : Activity() {
     private var accent = accents[0]
     private var columns = 4
     private var showLabels = true
+    private var showClock = true
+    private var iconSize = 43
+    private var favorites: MutableSet<String> = mutableSetOf()
+    private var hiddenApps: MutableSet<String> = mutableSetOf()
     private lateinit var root: LinearLayout
     private lateinit var appGrid: GridLayout
     private lateinit var search: EditText
@@ -46,6 +52,10 @@ class MainActivity : Activity() {
         accent = accents[prefs.getInt("accent", 0).coerceIn(accents.indices)]
         columns = prefs.getInt("columns", 4).coerceIn(3, 6)
         showLabels = prefs.getBoolean("labels", true)
+        showClock = prefs.getBoolean("show_clock", true)
+        iconSize = prefs.getInt("icon_size", 43).coerceIn(32, 64)
+        favorites = prefs.getStringSet("favorites", emptySet())?.toMutableSet() ?: mutableSetOf()
+        hiddenApps = prefs.getStringSet("hidden_apps", emptySet())?.toMutableSet() ?: mutableSetOf()
         if (!prefs.getBoolean("setup_complete", false)) showWelcome() else buildHome()
         prefs.getString("wallpaper", null)?.let { uri -> if (::root.isInitialized) applyWallpaper(Uri.parse(uri)) }
     }
@@ -102,7 +112,8 @@ class MainActivity : Activity() {
         brandStack.addView(label("ANONIXEX", 11f, accent, true))
         brandStack.addView(label("Your space.", 29f, white, true).apply { setPadding(0, dp(2), 0, 0) })
         top.addView(brandStack, LinearLayout.LayoutParams(0, -2, 1f))
-        top.addView(actionButton("•••", panel2, white) { showSettings() }.apply { textSize = 18f }, LinearLayout.LayoutParams(dp(52), dp(48)))
+        top.addView(actionButton("Quick", panel2, white) { showQuickPanel() }, LinearLayout.LayoutParams(dp(68), dp(46)).apply { rightMargin = dp(7) })
+        top.addView(actionButton("•••", panel2, white) { showSettings() }.apply { textSize = 18f }, LinearLayout.LayoutParams(dp(48), dp(46)))
         content.addView(top)
 
         val hero = card().apply {
@@ -170,7 +181,7 @@ class MainActivity : Activity() {
         if (!::appGrid.isInitialized) return
         appGrid.removeAllViews()
         appGrid.columnCount = columns
-        val shown = apps.filter { it.title.contains(filter, true) }
+        val shown = apps.filter { it.packageName !in hiddenApps && it.title.contains(filter, true) }
         shown.forEach { app ->
             val tile = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
@@ -181,12 +192,9 @@ class MainActivity : Activity() {
                     packageManager.getLaunchIntentForPackage(app.packageName)?.let { startActivity(it) }
                         ?: Toast.makeText(this@MainActivity, "App cannot be opened", Toast.LENGTH_SHORT).show()
                 }
-                setOnLongClickListener {
-                    startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${app.packageName}")))
-                    true
-                }
+                setOnLongClickListener { showAppActions(app); true }
             }
-            tile.addView(ImageView(this).apply { setImageDrawable(app.icon); scaleType = ImageView.ScaleType.FIT_CENTER }, LinearLayout.LayoutParams(dp(43), dp(43)))
+            tile.addView(ImageView(this).apply { setImageDrawable(app.icon); scaleType = ImageView.ScaleType.FIT_CENTER }, LinearLayout.LayoutParams(dp(iconSize), dp(iconSize)))
             if (showLabels) tile.addView(TextView(this).apply {
                 text = app.title
                 textSize = 10.5f
