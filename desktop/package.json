@@ -1,0 +1,44 @@
+{
+  "name": "anonixex-desktop",
+  "version": "0.1.0",
+  "description": "Anonixex futuristic desktop companion",
+  "main": "main.js",
+  "author": "hacer62828",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win portable --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.anonixex.desktop",
+    "productName": "Anonixex",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "renderer.js",
+      "styles.css",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "Anonixex-Desktop-${version}-x64.exe"
+    }
+  }
+}
