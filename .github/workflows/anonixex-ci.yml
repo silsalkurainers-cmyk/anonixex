@@ -1,0 +1,40 @@
+name: Anonixex CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Compile Anonixex x86_64 kernel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld make binutils
+
+      - name: Build kernel
+        run: make
+
+      - name: Check kernel file
+        run: |
+          test -s build/anonixex-kernel.elf
+          file build/anonixex-kernel.elf
+          readelf -h build/anonixex-kernel.elf
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: anonixex-kernel-x86_64
+          path: build/anonixex-kernel.elf
+          if-no-files-found: error
