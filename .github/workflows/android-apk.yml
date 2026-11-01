@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-apk:
@@ -42,12 +42,30 @@ jobs:
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" --install "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Build debug APK
+      - name: Build Android APK
         run: gradle --no-daemon :app:assembleDebug
 
-      - name: Upload APK
+      # GitHub Actions artifacts are always ZIP-wrapped. This is only a backup;
+      # the GitHub Release below publishes the raw .apk as a direct download.
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: anonixex-launcher-debug
+          name: anonixex-launcher-build
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      - name: Publish APK release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: launcher-v0.1.0-build-${{ github.run_number }}
+          name: Anonixex Launcher v0.1.0 (Build ${{ github.run_number }})
+          body: |
+            First public Anonixex Android launcher build.
+
+            Download **Anonixex-Launcher.apk** below and install it on your Android phone.
+            Android may ask you to allow installation from the browser or file manager you used.
+
+            This is an early-access debug build. It is not the Anonixex operating system yet.
+          prerelease: false
+          files: app/build/outputs/apk/debug/app-debug.apk
+          overwrite_files: true
