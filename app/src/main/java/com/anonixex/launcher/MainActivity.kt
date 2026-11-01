@@ -40,19 +40,7 @@ class MainActivity : Activity() {
 
     private data class Launchable(val title: String, val packageName: String, val icon: android.graphics.drawable.Drawable)
 
-    private val wallpaperPicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.let { uri ->
-                try {
-                    contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    prefs.edit().putString("wallpaper", uri.toString()).apply()
-                    applyWallpaper(uri)
-                } catch (_: Exception) {
-                    Toast.makeText(this, "Could not use that image", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -263,6 +251,22 @@ class MainActivity : Activity() {
         setContentView(box)
     }
 
+    @Deprecated("Handled for compatibility with the minimum SDK")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == WALLPAPER_REQUEST && resultCode == Activity.RESULT_OK) {
+            data?.data?.let { uri ->
+                try {
+                    contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    prefs.edit().putString("wallpaper", uri.toString()).apply()
+                    applyWallpaper(uri)
+                } catch (_: Exception) {
+                    Toast.makeText(this, "Could not use that image", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     private fun applyWallpaper(uri: Uri) {
         try {
             contentResolver.openInputStream(uri)?.use { stream ->
@@ -294,4 +298,6 @@ class MainActivity : Activity() {
 
     private fun rounded(color: Int, radius: Int) = GradientDrawable().apply { setColor(color); cornerRadius = radius.toFloat() }
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
+
+    companion object { private const val WALLPAPER_REQUEST = 1001 }
 }
