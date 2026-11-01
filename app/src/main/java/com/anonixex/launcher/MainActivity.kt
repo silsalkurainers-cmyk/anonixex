@@ -203,7 +203,7 @@ class MainActivity : Activity() {
                 format24Hour = "HH:mm"
                 textSize = 42f
                 setTextColor(white)
-                typeface = Typeface.create("sans-serif", Typeface.LIGHT)
+                typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
             })
             clock.addView(TextClock(this).apply {
                 format12Hour = "EEEE  ·  d MMMM"
