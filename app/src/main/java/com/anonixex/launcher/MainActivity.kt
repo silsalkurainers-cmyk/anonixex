@@ -13,6 +13,8 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -48,6 +50,10 @@ class MainActivity : Activity() {
     private var showClock = true
     private var showSearch = true
     private var glassMode = true
+    private var glassOpacity = 78
+    private var cornerRadius = 26
+    private var islandExpanded = false
+    private var swipeStartY = 0f
     private var favorites: MutableSet<String> = mutableSetOf()
     private var hiddenApps: MutableSet<String> = mutableSetOf()
     private var apps: List<Launchable> = emptyList()
@@ -63,6 +69,18 @@ class MainActivity : Activity() {
         val icon: android.graphics.drawable.Drawable
     )
 
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_DOWN) swipeStartY = event.rawY
+        if (event.action == MotionEvent.ACTION_UP && prefs.getBoolean("setup_complete", false) &&
+            swipeStartY > resources.displayMetrics.heightPixels * 0.70f &&
+            swipeStartY - event.rawY > dp(90) && ::root.isInitialized) {
+            showAppLibrary()
+            swipeStartY = 0f
+            return true
+        }
+        return super.dispatchTouchEvent(event)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.statusBarColor = bg
@@ -76,6 +94,8 @@ class MainActivity : Activity() {
         showClock = prefs.getBoolean("show_clock", true)
         showSearch = prefs.getBoolean("show_search", true)
         glassMode = prefs.getBoolean("glass_mode", true)
+        glassOpacity = prefs.getInt("glass_opacity", 78).coerceIn(30, 96)
+        cornerRadius = prefs.getInt("corner_radius", 26).coerceIn(14, 38)
         favorites = prefs.getStringSet("favorites", emptySet())?.toMutableSet() ?: mutableSetOf()
         hiddenApps = prefs.getStringSet("hidden_apps", emptySet())?.toMutableSet() ?: mutableSetOf()
         loadApps()
@@ -195,6 +215,7 @@ class MainActivity : Activity() {
         header.addView(actionButton("◉", glass, white) { showControlCenter() }, LinearLayout.LayoutParams(dp(48), dp(46)).apply { rightMargin = dp(6) })
         header.addView(actionButton("⚙", glass, white) { showSettings() }, LinearLayout.LayoutParams(dp(48), dp(46)))
         content.addView(header)
+        addDynamicIsland(root)
 
         if (showClock) {
             val clock = glassCard().apply { setPadding(dp(18), dp(14), dp(18), dp(14)) }
@@ -213,20 +234,6 @@ class MainActivity : Activity() {
             })
             content.addView(clock, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(19) })
         }
-
-        val spotlight = glassCard().apply {
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.argb(220, 42, 73, 103), Color.argb(190, 37, 39, 72), Color.argb(180, 27, 34, 51))).apply {
-                cornerRadius = dp(25).toFloat()
-                setStroke(dp(1), Color.argb(75, 220, 238, 255))
-            }
-        }
-        spotlight.addView(label("PERSONAL SPACE  /  001", 10f, accent, true))
-        spotlight.addView(label("Everything,\nin its own orbit.", 24f, white, true).apply {
-            setPadding(0, dp(9), 0, dp(7))
-        })
-        spotlight.addView(label("A little more you. A little less ordinary.", 12f, muted, false))
-        content.addView(spotlight, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(13) })
 
         if (showSearch) {
             val searchPanel = glassCard().apply {
@@ -287,6 +294,119 @@ class MainActivity : Activity() {
         setContentView(root)
         loadApps()
         prefs.getString("wallpaper", null)?.let { applyWallpaper(Uri.parse(it)) }
+    }
+
+    private fun addDynamicIsland(container: LinearLayout) {
+        val wrap = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER; setPadding(0, dp(1), 0, dp(8)) }
+        val island = TextView(this).apply {
+            text = "●   ●"; textSize = 10f; gravity = Gravity.CENTER; setTextColor(accent)
+            background = GradientDrawable().apply { setColor(Color.rgb(1, 3, 8)); cornerRadius = dp(24).toFloat(); setStroke(dp(1), Color.argb(110, 220, 240, 255)) }
+            elevation = dp(8).toFloat(); setPadding(dp(25), dp(7), dp(25), dp(7))
+        }
+        val panel = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; background = glassCardBackground(); setPadding(dp(13), dp(10), dp(13), dp(10)); visibility = if (islandExpanded) View.VISIBLE else View.GONE }
+        panel.addView(label("QUICK ACCESS", 9f, accent, true))
+        val selected = apps.firstOrNull { it.packageName == prefs.getString("island_app", null) }
+        if (selected != null) panel.addView(actionButton("Open " + selected.title, glassBright, white) {
+            packageManager.getLaunchIntentForPackage(selected.packageName)?.let { startActivity(it) }
+        })
+        val savedUrl = prefs.getString("island_url", "").orEmpty()
+        if (savedUrl.isNotBlank()) panel.addView(actionButton("Open saved link", glass, white) {
+            try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(savedUrl))) } catch (_: Exception) { Toast.makeText(this, "Could not open link", Toast.LENGTH_SHORT).show() }
+        })
+        if (selected == null && savedUrl.isBlank()) panel.addView(label("Set an app or link in Studio.", 11f, muted, false))
+        val detector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                islandExpanded = !islandExpanded
+                panel.visibility = if (islandExpanded) View.VISIBLE else View.GONE
+                return true
+            }
+        })
+        island.setOnTouchListener { _, event -> detector.onTouchEvent(event); true }
+        wrap.addView(island, LinearLayout.LayoutParams(dp(122), dp(31)))
+        wrap.addView(panel, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
+        container.addView(wrap, 0, LinearLayout.LayoutParams(-1, -2))
+    }
+
+    private fun configureIsland() {
+        val names = apps.map { it.title }.toTypedArray()
+        val packages = apps.map { it.packageName }
+        AlertDialog.Builder(this).setTitle("Dynamic Island · Quick app")
+            .setItems(names) { _, which ->
+                prefs.edit().putString("island_app", packages[which]).apply()
+                configureIslandLink()
+            }.setNeutralButton("No app", null).setNegativeButton("Cancel", null).show()
+    }
+
+    private fun configureIslandLink() {
+        val input = EditText(this).apply { hint = "https://example.com"; setSingleLine(true); setText(prefs.getString("island_url", "")); setTextColor(white); setHintTextColor(muted) }
+        AlertDialog.Builder(this).setTitle("Dynamic Island · Quick link").setView(input)
+            .setPositiveButton("Save") { _, _ ->
+                val value = input.text.toString().trim()
+                if (value.isBlank() || value.startsWith("https://") || value.startsWith("http://")) {
+                    prefs.edit().putString("island_url", value).apply()
+                    Toast.makeText(this, "Dynamic Island actions saved", Toast.LENGTH_SHORT).show()
+                } else Toast.makeText(this, "Use an http or https link", Toast.LENGTH_SHORT).show()
+            }.setNegativeButton("Cancel", null).show()
+    }
+
+    private fun showTerminal() {
+        val page = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(18), dp(25), dp(18), dp(15)); background = backgroundGradient() }
+        page.addView(label("ANONIXEX CORE", 10f, accent, true))
+        page.addView(label("Terminal", 29f, white, true).apply { setPadding(0, dp(6), 0, dp(12)) })
+        val output = TextView(this).apply {
+            text = "Anonixex shell 0.1 · isolated command environment\nType 'help' to list supported commands.\n\n"
+            textSize = 11f; setTextColor(Color.rgb(153, 232, 197)); typeface = Typeface.MONOSPACE
+            setPadding(dp(12), dp(12), dp(12), dp(12)); background = rounded(Color.rgb(3, 7, 13), dp(14))
+        }
+        val scroll = ScrollView(this); scroll.addView(output)
+        page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        val input = EditText(this).apply { hint = "anonixex $ help"; setSingleLine(true); setTextColor(white); setHintTextColor(muted); typeface = Typeface.MONOSPACE }
+        page.addView(input, LinearLayout.LayoutParams(-1, dp(52)).apply { topMargin = dp(10) })
+        page.addView(actionButton("Run command", accent, bg) {
+            val raw = input.text.toString().trim()
+            if (raw.isNotBlank()) { output.append("\nanonixex $ " + raw + "\n"); output.append(runAnonixexCommand(raw)); output.append("\n"); input.setText(""); scroll.post { scroll.fullScroll(View.FOCUS_DOWN) } }
+        })
+        page.addView(label("Commands run inside Anonixex only; arbitrary host shell commands are not executed.", 10f, muted, false))
+        page.addView(actionButton("Back to Studio", glassBright, white) { showSettings() })
+        setContentView(page)
+    }
+
+    private fun runAnonixexCommand(raw: String): String {
+        val parts = raw.trim().split(Regex("\\s+"), limit = 2)
+        val command = parts.firstOrNull()?.lowercase().orEmpty()
+        val arg = parts.getOrNull(1).orEmpty()
+        return when (command) {
+            "help" -> "help, clear, neofetch, uname, date, uptime, apps, open <name>, theme list, theme <color>, wallpaper, settings, about, ls, pwd, whoami, free, lscpu, pkg list"
+            "clear" -> ""
+            "neofetch" -> "ANONIXEX · Android " + Build.VERSION.RELEASE + "\nCPU ABI: " + (Build.SUPPORTED_ABIS.firstOrNull() ?: "unknown")
+            "uname" -> "Anonixex-runtime 0.1 · Android userspace"
+            "date" -> java.util.Date().toString()
+            "uptime" -> "System uptime: " + (android.os.SystemClock.elapsedRealtime() / 1000) + " seconds"
+            "apps" -> apps.joinToString(" · ") { it.title }
+            "open" -> {
+                val app = apps.firstOrNull { it.title.equals(arg, true) || it.title.contains(arg, true) }
+                if (app == null) "App not found: " + arg else {
+                    packageManager.getLaunchIntentForPackage(app.packageName)?.let { startActivity(it) }
+                    "Launching " + app.title
+                }
+            }
+            "theme" -> {
+                val colors = mapOf("cyan" to 0, "violet" to 1, "mint" to 2, "peach" to 3, "amber" to 4, "pink" to 5, "ice" to 6, "blue" to 7)
+                if (arg == "list") colors.keys.joinToString(" · ") else if (colors.containsKey(arg)) {
+                    accent = accents[colors.getValue(arg)]; prefs.edit().putInt("accent", colors.getValue(arg)).apply(); "Accent set to " + arg
+                } else "Usage: theme list | theme cyan"
+            }
+            "wallpaper" -> if (prefs.contains("wallpaper")) "Custom wallpaper is active." else "No custom wallpaper selected."
+            "settings" -> { showSettings(); "Opening Anonixex Studio" }
+            "about" -> "Anonixex phone-first launcher · isolated command runtime · no separate kernel"
+            "ls" -> "home/  apps/  settings/  themes/  wallpaper/"
+            "pwd" -> "/anonixex"
+            "whoami" -> "user"
+            "free" -> "App runtime free memory: " + (Runtime.getRuntime().freeMemory() / 1024 / 1024) + " MB"
+            "lscpu" -> "CPU ABI: " + Build.SUPPORTED_ABIS.joinToString() + " · cores: " + Runtime.getRuntime().availableProcessors()
+            "pkg" -> if (arg == "list") "anonixex-shell  anonixex-launcher  glass-theme  dynamic-island" else "Local component registry preview; no system packages installed."
+            else -> "Command not found: " + command + ". Type help."
+        }
     }
 
     private fun showAppLibrary() {
@@ -458,6 +578,11 @@ class MainActivity : Activity() {
             buildHome()
         })
         settings.addView(look)
+        val glassTuning = glassCard()
+        glassTuning.addView(label("GLASS MATERIAL", 10f, accent, true))
+        addSlider(glassTuning, "Glass opacity (%)", glassOpacity, 30, 96) { glassOpacity = it; prefs.edit().putInt("glass_opacity", it).apply() }
+        addSlider(glassTuning, "Corner roundness", cornerRadius, 14, 38) { cornerRadius = it; prefs.edit().putInt("corner_radius", it).apply() }
+        settings.addView(glassTuning, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
         val layout = glassCard()
         layout.addView(label("02  /  LAYOUT & TYPOGRAPHY", 10f, accent, true))
@@ -491,6 +616,8 @@ class MainActivity : Activity() {
                     buildHome()
                 }.show()
         })
+        privacy.addView(actionButton("Configure Dynamic Island", glassBright, white) { configureIsland() })
+        privacy.addView(actionButton("Open Anonixex Terminal", glassBright, white) { showTerminal() })
         settings.addView(privacy, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
         val system = glassCard()
@@ -693,13 +820,13 @@ class MainActivity : Activity() {
     }
 
     private fun glassCardBackground(): GradientDrawable {
-        val fill = if (glassMode) glass else Color.rgb(24, 29, 40)
+        val fill = if (glassMode) Color.argb((glassOpacity * 2.35f).toInt().coerceIn(60, 235), 31, 42, 61) else Color.rgb(24, 29, 40)
         return GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
             intArrayOf(fill, Color.argb(190, 21, 27, 40))
         ).apply {
-            cornerRadius = dp(22).toFloat()
-            setStroke(dp(1), Color.argb(if (glassMode) 95 else 35, 220, 236, 255))
+            cornerRadius = dp(cornerRadius).toFloat()
+            setStroke(dp(1), Color.argb(if (glassMode) 145 else 35, 220, 236, 255))
         }
     }
 
