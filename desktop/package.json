@@ -7,7 +7,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
-    "dist:win": "electron-builder --win portable --x64 --publish never"
+    "dist:win": "electron-builder --win portable --x64 --publish never",
+    "check": "node --check main.js && node --check preload.js && node --check renderer.js"
   },
   "devDependencies": {
     "electron": "^33.2.1",
