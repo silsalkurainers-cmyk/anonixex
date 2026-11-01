@@ -1,18 +1,17 @@
-# CPU architecture support
+# Architecture support
 
-Architecture-specific code lives here.
+Anonixex is phone-first. ARM is the primary architecture family.
 
-| Architecture | Status |
-| --- | --- |
-| x86_64 | Initial freestanding kernel build |
-| x86 (32-bit) | Planned |
-| ARM32 / AArch32 | Planned |
-| ARM64 / AArch64 | Planned |
+| Architecture | Intended role | Current status |
+| --- | --- | --- |
+| ARMv7-A / AArch32 | 32-bit phones and boards | Freestanding C compile prototype |
+| ARMv8-A / AArch64 | 64-bit phones and boards | Freestanding C compile prototype |
+| x86 / i386 | Optional PC testing | Freestanding C compile prototype |
+| x86_64 | Optional PC testing | Freestanding C compile prototype |
 
-The first milestone intentionally brings up one target at a time. The common
-kernel core will be kept separate from architecture-specific boot, interrupt,
-CPU, and memory-management code.
+The common kernel source must not contain PC-only port I/O. CPU-specific
+entry, exception vectors, interrupt controllers, timers, memory management,
+and platform drivers belong in architecture/platform directories.
 
-A successful x86_64 compile does not imply that the other targets are supported.
-Each target needs its own entry code, linker layout, interrupt setup, and
-hardware testing.
+A successful object compilation only proves that the source compiles for that
+CPU target. It does not mean the OS boots or supports a real phone.
