@@ -54,6 +54,7 @@ class MainActivity : Activity() {
     private var cornerRadius = 26
     private var islandExpanded = false
     private var swipeStartY = 0f
+    private var launcherHomeVisible = false
     private var favorites: MutableSet<String> = mutableSetOf()
     private var hiddenApps: MutableSet<String> = mutableSetOf()
     private var apps: List<Launchable> = emptyList()
@@ -72,7 +73,7 @@ class MainActivity : Activity() {
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) swipeStartY = event.rawY
         if (event.action == MotionEvent.ACTION_UP && prefs.getBoolean("setup_complete", false) &&
-            swipeStartY > resources.displayMetrics.heightPixels * 0.70f &&
+            launcherHomeVisible && swipeStartY > resources.displayMetrics.heightPixels * 0.70f &&
             swipeStartY - event.rawY > dp(90) && ::root.isInitialized) {
             showAppLibrary()
             swipeStartY = 0f
@@ -202,6 +203,7 @@ class MainActivity : Activity() {
     }
 
     private fun buildHome() {
+        launcherHomeVisible = true
         root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(17), dp(23), dp(17), dp(11))
@@ -352,6 +354,7 @@ class MainActivity : Activity() {
     }
 
     private fun showTerminal() {
+        launcherHomeVisible = false
         val page = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(18), dp(25), dp(18), dp(15)); background = backgroundGradient() }
         page.addView(label("ANONIXEX CORE", 10f, accent, true))
         page.addView(label("Terminal", 29f, white, true).apply { setPadding(0, dp(6), 0, dp(12)) })
@@ -412,6 +415,7 @@ class MainActivity : Activity() {
     }
 
     private fun showAppLibrary() {
+        launcherHomeVisible = false
         val page = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(18), dp(25), dp(18), dp(14))
@@ -546,6 +550,7 @@ class MainActivity : Activity() {
     }
 
     private fun showSettings() {
+        launcherHomeVisible = false
         val page = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(19), dp(25), dp(19), dp(14))
@@ -643,6 +648,7 @@ class MainActivity : Activity() {
     }
 
     private fun showControlCenter() {
+        launcherHomeVisible = false
         val page = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(27), dp(20), dp(16))
@@ -680,6 +686,7 @@ class MainActivity : Activity() {
     }
 
     private fun showKernelLab() {
+        launcherHomeVisible = false
         val page = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(25), dp(20), dp(15))
