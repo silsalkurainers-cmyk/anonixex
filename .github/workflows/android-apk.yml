@@ -92,16 +92,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: launcher-v0.1.0-build-${{ github.run_number }}
-          name: Anonixex v0.1.0 (Build ${{ github.run_number }})
+          name: Anonixex BETA v0.1.0 (Build ${{ github.run_number }})
           body: |
             Anonixex early-access builds.
 
             **Android:** Download `Anonixex-Launcher.apk` and install it on your Android phone.
 
-            **Windows x64:** Download `Anonixex-Desktop-0.1.0-x64.exe`. This is a portable 64-bit Windows desktop companion; run it directly without an installer.
+            **Windows x64 BETA TEST:** Download `Anonixex-Desktop-BETA-0.1.0-x64.exe`. This is an experimental portable 64-bit Windows companion. It is for beta testing only and is not a finished operating system.
 
-            Both builds share the Anonixex visual identity and customization concept. The desktop build is a Windows companion app, not a separate operating system or kernel.
-          prerelease: false
+            The Android APK remains the phone launcher. The Windows executable is explicitly a beta companion and does not install or replace a Windows kernel.
+          prerelease: true
           files: |
             release-assets/android/Anonixex-Launcher.apk
             release-assets/windows/*.exe
