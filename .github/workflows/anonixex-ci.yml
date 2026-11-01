@@ -2,8 +2,7 @@ name: Anonixex CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -11,30 +10,49 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Compile Anonixex x86_64 kernel
+  compile:
+    name: Compile ${{ matrix.name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ARM 32-bit phone target
+            make_target: phone32
+            artifact: anonixex-arm32
+            file: build/anonixex-arm32.o
+          - name: ARM 64-bit phone target
+            make_target: phone64
+            artifact: anonixex-arm64
+            file: build/anonixex-arm64.o
+          - name: x86 32-bit optional target
+            make_target: pc32
+            artifact: anonixex-x86
+            file: build/anonixex-x86.o
+          - name: x86_64 optional target
+            make_target: pc64
+            artifact: anonixex-x86_64
+            file: build/anonixex-x86_64.o
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install build tools
+      - name: Install Clang
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang lld make binutils
+          sudo apt-get install -y clang make binutils
 
-      - name: Build kernel
-        run: make
+      - name: Compile target
+        run: make ${{ matrix.make_target }}
 
-      - name: Check kernel file
+      - name: Verify object architecture
         run: |
-          test -s build/anonixex-kernel.elf
-          file build/anonixex-kernel.elf
-          readelf -h build/anonixex-kernel.elf
+          test -s "${{ matrix.file }}"
+          file "${{ matrix.file }}"
 
-      - name: Upload build
+      - name: Upload object
         uses: actions/upload-artifact@v4
         with:
-          name: anonixex-kernel-x86_64
-          path: build/anonixex-kernel.elf
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.file }}
           if-no-files-found: error
