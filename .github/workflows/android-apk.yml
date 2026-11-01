@@ -1,10 +1,11 @@
-name: Build Anonixex Android APK
+name: Build Anonixex for Android and 64-bit Windows
 
 on:
   push:
     branches: [main]
     paths:
       - "app/**"
+      - "desktop/**"
       - "*.gradle.kts"
       - "gradle.properties"
       - ".github/workflows/android-apk.yml"
@@ -19,18 +20,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
-
       - name: Install Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
-
       - name: Install Android platform
         shell: bash
         run: |
@@ -41,34 +39,70 @@ jobs:
           fi
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" --install "platforms;android-35" "build-tools;35.0.0"
-
       - name: Build Android APK
         run: gradle --no-daemon :app:assembleDebug
-
       - name: Name APK for release
         run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/Anonixex-Launcher.apk
-
-      # GitHub Actions artifacts are always ZIP-wrapped. This is only a backup;
-      # the GitHub Release below publishes the raw .apk as a direct download.
-      - name: Upload build artifact
+      - name: Upload APK for release
         uses: actions/upload-artifact@v4
         with:
-          name: anonixex-launcher-build
+          name: anonixex-android
           path: app/build/outputs/apk/debug/Anonixex-Launcher.apk
           if-no-files-found: error
 
-      - name: Publish APK release
+  build-windows-x64:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/package.json
+      - name: Install desktop dependencies
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+      - name: Build 64-bit Windows app
+        working-directory: desktop
+        run: npm run dist:win
+      - name: Upload Windows x64 build
+        uses: actions/upload-artifact@v4
+        with:
+          name: anonixex-windows-x64
+          path: desktop/dist/*.exe
+          if-no-files-found: error
+
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: [build-apk, build-windows-x64]
+    steps:
+      - name: Download Android APK
+        uses: actions/download-artifact@v4
+        with:
+          name: anonixex-android
+          path: release-assets/android
+      - name: Download Windows x64 app
+        uses: actions/download-artifact@v4
+        with:
+          name: anonixex-windows-x64
+          path: release-assets/windows
+      - name: Publish both builds
         uses: softprops/action-gh-release@v2
         with:
           tag_name: launcher-v0.1.0-build-${{ github.run_number }}
-          name: Anonixex Launcher v0.1.0 (Build ${{ github.run_number }})
+          name: Anonixex v0.1.0 (Build ${{ github.run_number }})
           body: |
-            First public Anonixex Android launcher build.
+            Anonixex early-access builds.
 
-            Download **Anonixex-Launcher.apk** below and install it on your Android phone.
-            Android may ask you to allow installation from the browser or file manager you used.
+            **Android:** Download `Anonixex-Launcher.apk` and install it on your Android phone.
 
-            This is an early-access debug build. It is not the Anonixex operating system yet.
+            **Windows x64:** Download `Anonixex-Desktop-0.1.0-x64.exe`. This is a portable 64-bit Windows desktop companion; run it directly without an installer.
+
+            Both builds share the Anonixex visual identity and customization concept. The desktop build is a Windows companion app, not a separate operating system or kernel.
           prerelease: false
-          files: app/build/outputs/apk/debug/Anonixex-Launcher.apk
+          files: |
+            release-assets/android/Anonixex-Launcher.apk
+            release-assets/windows/*.exe
           overwrite_files: true
