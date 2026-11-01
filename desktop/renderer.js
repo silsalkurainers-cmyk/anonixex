@@ -1,66 +1,89 @@
-const $=s=>document.querySelector(s), colors=["#77e0ff","#b491ff","#78f5c2","#ffab87","#ffd577","#f485be","#e2ebff","#a0beff"];
-const base={setup:false,accent:0,glass:true,labels:true,clock:true,search:true,columns:4,iconSize:48,textScale:100,wallpaper:"",favorites:[],hidden:[]};
-let s={...base,...JSON.parse(localStorage.getItem("anonixex-settings")||"{}")},page=s.setup?"home":"setup",step=0,apps=[],query="";
-const save=()=>localStorage.setItem("anonixex-settings",JSON.stringify(s)),esc=x=>String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const btn=(t,a,k="soft")=>'<button class="button '+k+'" data-action="'+a+'">'+t+'</button>';
-const card=x=>'<section class="glass-card">'+x+'</section>';
-const palette=()=>'<div class="palette">'+colors.map((c,i)=>'<button data-accent="'+i+'" class="'+(s.accent===i?"selected":"")+'" style="--swatch:'+c+'"></button>').join("")+'</div>';
-const nav=x=>'<nav class="bottom-nav">'+["home","apps","studio"].map(p=>'<button data-page="'+p+'" class="'+(x===p?"active":"")+'">'+(p==="home"?"⌂":p==="apps"?"▦":"◈")+'<span>'+p[0].toUpperCase()+p.slice(1)+'</span></button>').join("")+'</nav>';
-const tile=a=>'<button class="app-tile" data-launch="'+esc(a.path)+'"><span class="app-icon">'+esc(a.name[0].toUpperCase())+'</span>'+(s.labels?'<span class="app-name">'+esc(a.name)+'</span>':"")+'</button>';
-const head=(t,d)=>'<header class="topbar"><div><div class="brand">A N O N I X E X</div><h1>'+t+'</h1><p>'+d+'</p></div><div class="top-actions">'+btn("◉","control")+btn("⚙","studio")+'</div></header>';
-function render(){
- document.documentElement.style.setProperty("--accent",colors[s.accent]);document.documentElement.style.setProperty("--icon-size",s.iconSize+"px");document.documentElement.style.setProperty("--columns",s.columns);document.documentElement.style.setProperty("--text-scale",s.textScale/100);document.body.classList.toggle("flat",!s.glass);
- let bg=s.wallpaper?'background-image:linear-gradient(120deg,#050912c9,#050912df),url("'+s.wallpaper+'")':"";
- let content=page==="setup"?setup():page==="home"?home():page==="apps"?library():page==="studio"?studio():page==="control"?control():kernel();
- $("#app").innerHTML='<main class="shell" style="'+bg+'">'+content+'</main>';
- if(page==="home")clock();
-}
-function setup(){
- let parts=[
- card('<div class="eyebrow">01 / THE EXPERIENCE</div><h2>Liquid glass.<br>Deep space.<br>Your rules.</h2><p>A home screen, app library, quick controls and deep customization. No ads. No account. No tracking.</p>'),
- '<div class="eyebrow">02 / PICK YOUR COLOR</div><h2>Choose your atmosphere.</h2>'+palette(),
- card('<div class="eyebrow">03 / YOUR WALLPAPER</div><h2>Make it yours.</h2><p>Choose an image from your PC for your Anonixex backdrop.</p>'+btn("Choose a picture","wallpaper","primary")+'<p class="hint">'+(s.wallpaper?"Custom wallpaper selected":"Or keep the default atmosphere.")+'</p>'),
- card('<div class="eyebrow">04 / READY WHEN YOU ARE</div><h2>Your desktop.<br>Your universe.</h2><p>This is a desktop companion, not a replacement for Windows or its kernel.</p>')
- ];
- return '<div class="setup-wrap"><div class="brand">A N O N I X E X <span>DESKTOP</span></div><div class="setup-progress">'+[0,1,2,3].map(i=>'<i class="'+(i<=step?"done":"")+'"></i>').join("")+'</div>'+parts[step]+'<div class="setup-actions">'+(step?btn("Back","back"):"")+btn(step===3?"Enter Anonixex":"Continue","next","primary")+'</div><div class="signature">made by hacer62828</div></div>';
-}
+const $=s=>document.querySelector(s);
+const accents=["#91e8ff","#b8a0ff","#91f0c5","#ffb38d","#ffdb85","#f39acb","#e7efff","#8faeff"];
+const defaults={setup:false,accent:0,glass:92,blur:28,opacity:78,radius:28,columns:4,iconSize:42,textScale:100,labels:true,clock:true,search:true,wallpaper:"",favorite:"",islandUrl:"",islandOpen:false};
+let state={...defaults,...JSON.parse(localStorage.getItem("anonixex-settings")||"{}")};
+let page=state.setup?"home":"setup",step=0,apps=[],query="",terminalHistory=["Anonixex shell 0.1 · isolated app command environment","Type 'help' to see supported commands."];
+const save=()=>localStorage.setItem("anonixex-settings",JSON.stringify(state));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const button=(label,action,kind="glass")=>'<button class="btn '+kind+'" data-action="'+action+'">'+label+'</button>';
+const palette=()=>'<div class="palette">'+accents.map((c,i)=>'<button title="Accent '+(i+1)+'" data-accent="'+i+'" style="--swatch:'+c+'" class="'+(state.accent===i?"selected":"")+'"></button>').join("")+'</div>';
+const nav=()=>'<nav class="nav"><button data-page="home" class="'+(page==="home"?"active":"")+'">⌂</button><button data-page="library" class="'+(page==="library"?"active":"")+'">▦</button><button data-page="studio" class="'+(page==="studio"?"active":"")+'">◈</button><button data-page="terminal" class="'+(page==="terminal"?"active":"")+'">›_</button></nav>';
+const tile=a=>'<button class="tile" data-launch="'+esc(a.path)+'"><span class="appicon">'+esc(a.name.slice(0,1).toUpperCase())+'</span>'+(state.labels?'<span class="appname">'+esc(a.name)+'</span>':"")+'</button>';
+function shell(content){return '<main class="phone" style="--accent:'+accents[state.accent]+';--glass:'+state.opacity+'%;--blur:'+state.blur+'px;--radius:'+state.radius+'px;--columns:'+state.columns+';--icon:'+state.iconSize+'px;--scale:'+state.textScale/100+';--glass-strength:'+state.glass/100+'">'+content+'</main>';}
+function island(){let fav=apps.find(a=>a.path===state.favorite);return '<div class="island-wrap"><button class="island '+(state.islandOpen?"expanded":"")+'" id="island" aria-label="Dynamic Island"><i></i><i></i><span>'+(state.islandOpen?"ANONIXEX":"")+'</span></button>'+(state.islandOpen?'<div class="island-panel"><div class="island-title">QUICK ACCESS</div>'+(fav?'<button class="quick" data-launch="'+esc(fav.path)+'">◉ '+esc(fav.name)+'</button>':'<p>No app assigned yet. Set one in Studio.</p>')+(state.islandUrl?'<button class="quick" data-link="'+esc(state.islandUrl)+'">↗ Open saved link</button>':"")+'</div>':"")+'</div>';}
+function clock(){return '<div class="clock-block"><div class="clock" id="clock">--:--</div><div class="date" id="date"></div></div>';}
+function search(){return '<div class="search"><span>⌕</span><input id="search" placeholder="Search apps" value="'+esc(query)+'"></div>';}
 function home(){
- let fav=s.favorites.map(p=>apps.find(a=>a.path===p)).filter(Boolean),recent=apps.filter(a=>!s.hidden.includes(a.path)&&a.name.toLowerCase().includes(query.toLowerCase())).slice(0,8);
- return '<div class="content">'+head("Good to see you.","Your desktop, reimagined around you.")+(s.clock?card('<div class="clock" id="clock">--:--</div><div class="date" id="date"></div>'):"")+'<div class="spotlight"><div class="eyebrow">PERSONAL SPACE / 001</div><h2>Everything,<br>in its own orbit.</h2><p>A little more you. A little less ordinary.</p><div class="orb"></div></div>'+(s.search?searchBox("home-search"):"")+'<div class="section-head"><span>PINNED</span><small>Quick launch</small></div><div class="favorite-row">'+(fav.map(tile).join("")||'<div class="empty">Pin your favourite apps from the App Library.</div>')+'</div><div class="section-head"><span>APP LIBRARY</span><button data-page="apps">All apps ↗</button></div><div class="app-grid">'+(recent.map(tile).join("")||'<div class="empty">No Start Menu shortcuts found yet.</div>')+'</div><div class="signature">made by hacer62828</div></div>'+nav("home");
+ const fav=apps.find(a=>a.path===state.favorite),visible=apps.filter(a=>a.name.toLowerCase().includes(query.toLowerCase())).slice(0,8);
+ return island()+'<div class="screen home">'+(state.clock?clock():"")+'<div class="welcome"><span class="eyebrow">ANONIXEX</span><h1>Your space.</h1></div>'+(state.search?search():"")+(fav?'<div class="section"><div class="section-label">FAVOURITE</div><div class="app-grid">'+tile(fav)+'</div></div>':"")+'<div class="section"><div class="section-label">RECENT APPS</div><div class="app-grid">'+visible.map(tile).join("")+'</div></div><div class="swipe-hint">SWIPE UP FOR APP LIBRARY</div></div>'+nav();
 }
-function searchBox(id){return '<div class="searchbox"><span>⌕</span><input id="'+id+'" placeholder="Search apps" value="'+esc(query)+'"></div>';}
 function library(){
- let list=apps.filter(a=>!s.hidden.includes(a.path)&&a.name.toLowerCase().includes(query.toLowerCase()));
- return '<div class="content">'+head("App library.","Windows Start Menu shortcuts.")+searchBox("app-search")+'<div class="app-grid library-grid">'+list.map(a=>tile(a)+'<button class="tiny-action" data-pin="'+esc(a.path)+'">'+(s.favorites.includes(a.path)?"Unpin":"Pin")+'</button><button class="tiny-action" data-hide="'+esc(a.path)+'">Hide</button>').join("")+'</div>'+card('<div class="eyebrow">APP DISCOVERY</div><p>Anonixex reads shortcuts from your Windows Start Menu. It does not scan private app data.</p>')+'</div>'+nav("apps");
+ const list=apps.filter(a=>a.name.toLowerCase().includes(query.toLowerCase()));
+ return island()+'<div class="screen library"><div class="eyebrow">YOUR PHONE · YOUR APPS</div><h1>App library</h1>'+search()+'<div class="app-grid">'+list.map(tile).join("")+'</div><p class="muted">'+list.length+' shortcuts found</p></div>'+nav();
 }
-function toggle(label,key){return '<div class="setting-row"><span>'+label+'</span><button class="toggle '+(s[key]?"on":"")+'" data-toggle="'+key+'">'+(s[key]?"ON":"OFF")+'</button></div>';}
-function slider(label,key,min,max){return '<label class="slider-row"><span>'+label+' <b>'+s[key]+(key==="textScale"?"%":"")+'</b></span><input type="range" min="'+min+'" max="'+max+'" value="'+s[key]+'" data-slider="'+key+'"></label>';}
-function sysButtons(){return [["Display & brightness","display"],["Network & Wi-Fi","network"],["Bluetooth","bluetooth"],["Sound","sound"],["Notifications","notifications"],["Battery & power","battery"],["Privacy & security","privacy"],["Storage","storage"],["Installed apps","apps"],["Windows Update","updates"],["Windows Settings","settings"]].map(x=>btn(x[0],"sys:"+x[1])).join("");}
+function range(label,key,min,max,unit=""){return '<label class="range"><span>'+label+' <b id="v-'+key+'">'+state[key]+unit+'</b></span><input type="range" min="'+min+'" max="'+max+'" value="'+state[key]+'" data-range="'+key+'"></label>';}
+function toggle(label,key){return '<div class="setting"><span>'+label+'</span><button data-toggle="'+key+'" class="switch '+(state[key]?"on":"")+'">'+(state[key]?"ON":"OFF")+'</button></div>';}
 function studio(){
- return '<div class="content">'+head("Make it yours.","Your look. Your layout. Your rules.")+card('<div class="eyebrow">01 / VISUAL IDENTITY</div><h3>Accent palette</h3>'+palette()+toggle("Liquid glass panels","glass")+toggle("App labels","labels")+toggle("Home clock","clock")+toggle("Home search","search"))+card('<div class="eyebrow">02 / LAYOUT & TYPOGRAPHY</div>'+slider("App columns","columns",3,8)+slider("Icon size","iconSize",32,76)+slider("Text scale","textScale",85,125))+card('<div class="eyebrow">03 / YOUR BACKDROP</div><h3>Wallpaper studio</h3>'+btn("Choose picture from PC","wallpaper","primary")+btn("Remove custom wallpaper","remove"))+card('<div class="eyebrow">04 / APP LIBRARY</div><h3>Organize your space</h3><p>'+s.hidden.length+' hidden shortcuts · '+s.favorites.length+' pinned apps</p>'+btn("Restore hidden apps","unhide")+btn("Reset appearance","reset"))+card('<div class="eyebrow">05 / SYSTEM</div><h3>Windows integration</h3>'+sysButtons()+'<div class="button-row">'+btn("Kernel Lab","kernel")+'</div>')+'<div class="signature">made by hacer62828</div></div>'+nav("studio");
+ return island()+'<div class="screen studio"><div class="eyebrow">PERSONALIZATION</div><h1>Studio</h1><section class="glass-card"><h2>Appearance</h2><div class="label">Accent colour</div>'+palette()+range("Glass intensity","glass",0,100,"%")+range("Glass blur","blur",0,42,"px")+range("Panel transparency","opacity",25,96,"%")+range("Corner roundness","radius",14,42,"px")+'</section><section class="glass-card"><h2>Home screen</h2>'+toggle("App labels","labels")+toggle("Clock","clock")+toggle("Search","search")+range("Grid columns","columns",3,6)+range("Icon size","iconSize",30,62,"px")+range("Text scale","textScale",85,125,"%")+'</section><section class="glass-card"><h2>Dynamic Island</h2><p>Double-tap the island to reveal quick actions.</p><label class="field">Quick app<select id="favorite"><option value="">None</option>'+apps.map(a=>'<option value="'+esc(a.path)+'" '+(state.favorite===a.path?"selected":"")+'>'+esc(a.name)+'</option>').join("")+'</select></label><label class="field">Quick link<input id="island-url" placeholder="https://example.com" value="'+esc(state.islandUrl)+'"></label>'+button("Save quick actions","save-island","primary")+'</section><section class="glass-card"><h2>Wallpaper</h2>'+button("Choose from PC","wallpaper","primary")+button("Remove wallpaper","remove-wallpaper")+'</section><section class="glass-card"><h2>Windows beta</h2><p>This is a beta companion running on Windows, not a replacement OS or kernel.</p>'+["display","network","bluetooth","sound","notifications","battery","privacy","settings"].map(k=>button(k[0].toUpperCase()+k.slice(1),"sys:"+k)).join("")+'</section><div class="signature">made by hacer62828</div></div>'+nav();
 }
-function control(){return '<div class="content">'+head("Control center.","Quick access to Windows settings.")+card('<div class="eyebrow">CONNECTIVITY</div>'+btn("Wi-Fi & networks","sys:network")+btn("Bluetooth & devices","sys:bluetooth"))+card('<div class="eyebrow">DEVICE</div>'+btn("Display & brightness","sys:display")+btn("Sound","sys:sound")+btn("Battery & power","sys:battery")+btn("Notifications","sys:notifications")+btn("Privacy & security","sys:privacy"))+btn("Back to home","home","primary")+'</div>'+nav("home");}
-function kernel(){return '<div class="content">'+head("Kernel Lab.","A live readout of this PC.")+card('<div class="eyebrow">RUNNING DEVICE</div><h3 id="sys-title">Reading system information…</h3><p id="sys-info"></p>')+card('<div class="eyebrow">THE ANONIXEX KERNEL PROJECT</div><p>This app reports the kernel currently running on your PC. The original Anonixex kernel is a separate experimental project. This desktop app does not install or modify your operating system kernel.</p>')+btn("Back to Studio","studio","primary")+'</div>'+nav("studio");}
-function clock(){let d=new Date();if($("#clock"))$("#clock").textContent=d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});if($("#date"))$("#date").textContent=d.toLocaleDateString([],{weekday:"long",day:"numeric",month:"long"});}
-async function wallpaper(){let data=await window.anonixex.chooseWallpaper();if(data){s.wallpaper=data;save();render();}}
+function terminal(){return island()+'<div class="screen terminal"><div class="eyebrow">ANONIXEX CORE · BETA</div><h1>Terminal</h1><div class="terminal-window" id="term-out">'+terminalHistory.map(x=>'<div>'+esc(x)+'</div>').join("")+'</div><form id="term-form"><span>anonixex $</span><input id="term-input" autocomplete="off" spellcheck="false" placeholder="type help"></form><p class="muted">Arch-inspired commands run inside Anonixex only. They do not execute arbitrary Windows or Android shell commands.</p></div>'+nav();}
+function setup(){const pages=[
+ '<div class="eyebrow">01 · ANONIXEX</div><h1>Less noise.<br>More you.</h1><p>A phone-first home experience with glass surfaces, gestures and your own quick actions.</p>',
+ '<div class="eyebrow">02 · APPEARANCE</div><h1>Set the tone.</h1>'+palette(),
+ '<div class="eyebrow">03 · WALLPAPER</div><h1>Your backdrop.</h1>'+button("Choose wallpaper","wallpaper","primary"),
+ '<div class="eyebrow">04 · QUICK ACCESS</div><h1>Make the island yours.</h1><p>You can assign an app and a saved web link later in Studio.</p>'
+ ];return '<div class="setup">'+pages[step]+'<div class="setup-progress">'+[0,1,2,3].map(i=>'<i class="'+(i<=step?"done":"")+'"></i>').join("")+'</div><div class="setup-actions">'+(step?button("Back","back"):"")+button(step===3?"Start Anonixex":"Continue","next","primary")+'</div><div class="signature">made by hacer62828</div></div>';}
+function render(){document.body.classList.toggle("no-glass",state.glass===0);let c=page==="setup"?setup():page==="home"?home():page==="library"?library():page==="studio"?studio():terminal();$("#app").innerHTML=shell(c);updateClock();}
+function updateClock(){const d=new Date();if($("#clock"))$("#clock").textContent=d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});if($("#date"))$("#date").textContent=d.toLocaleDateString([],{weekday:"long",day:"numeric",month:"long"});}
+async function chooseWallpaper(){const data=await window.anonixex.chooseWallpaper();if(data){state.wallpaper=data;save();document.querySelector(".phone").style.backgroundImage='linear-gradient(#060a14aa,#060a14bb),url("'+data+'")';}}
+function runCommand(raw){
+ const [cmd,...args]=raw.trim().split(/\s+/),arg=args.join(" ");
+ const out=x=>terminalHistory.push(String(x));
+ if(!cmd)return;
+ switch(cmd){
+ case "help":out("help clear neofetch uname date uptime apps open <name> theme [name] wallpaper settings about ls pwd whoami free lscpu pkg list pkg search <term>");break;
+ case "clear":terminalHistory=[];break;
+ case "neofetch":out("  /\u005c_/\\\\   ANONIXEX BETA");out(" ( o.o )  "+(navigator.userAgent.includes("Windows")?"Windows desktop":"Android runtime"));out("  > ^ <   Liquid UI · local profile");break;
+ case "uname":out("Anonixex-runtime 0.1 · userspace shell");break;
+ case "date":out(new Date().toString());break;
+ case "uptime":out("Session uptime: "+Math.floor(performance.now()/1000)+" seconds");break;
+ case "apps":out(apps.map(a=>a.name).join(" · ")||"No shortcuts discovered");break;
+ case "open":{const a=apps.find(x=>x.name.toLowerCase()===arg.toLowerCase()||x.name.toLowerCase().includes(arg.toLowerCase()));if(a){window.anonixex.launchApp(a.path);out("Launching "+a.name);}else out("App not found: "+arg);break;}
+ case "theme":if(arg==="list")out("cyan violet mint peach amber pink ice blue");else{const n=["cyan","violet","mint","peach","amber","pink","ice","blue"].indexOf(arg);if(n>=0){state.accent=n;save();out("Accent set to "+arg);}else out("Usage: theme list | theme cyan");}break;
+ case "wallpaper":out(state.wallpaper?"A custom wallpaper is active. Use Studio to change it.":"No custom wallpaper selected.");break;
+ case "settings":page="studio";render();return;
+ case "about":out("Anonixex phone-first launcher UI · beta companion. Not a kernel or standalone OS.");break;
+ case "ls":out("home/  apps/  settings/  themes/  wallpaper/");break;
+ case "pwd":out("/anonixex");break;
+ case "whoami":out("user");break;
+ case "free":window.anonixex.getSystemInfo().then(i=>{terminalHistory.push("Memory: "+i.memory);if(page==="terminal")render();});out("Reading host memory…");break;
+ case "lscpu":window.anonixex.getSystemInfo().then(i=>{terminalHistory.push(i.cpu+" · "+i.cores+" cores · "+i.arch);if(page==="terminal")render();});out("Reading host CPU…");break;
+ case "pkg":out(arg==="list"?"Installed Anonixex components: shell, launcher-ui, glass-theme, island, app-library":"Package manager is a local preview; no system packages are installed.");break;
+ default:out("Command not found: "+cmd+". Type help.");
+ }
+ if(page==="terminal")render();
+}
 document.addEventListener("click",async e=>{
- let b=e.target.closest("button");if(!b)return;
- if(b.dataset.page){page=b.dataset.page;render();return;}
- if(b.dataset.action){let a=b.dataset.action;
- if(a==="back"){step=Math.max(0,step-1);render();}else if(a==="next"){if(step<3){step++;render();}else{s.setup=true;save();page="home";render();}}
- else if(a==="wallpaper")wallpaper();else if(a==="control"){page="control";render();}else if(a==="studio"){page="studio";render();}else if(a==="home"){page="home";render();}
- else if(a==="remove"){s.wallpaper="";save();render();}else if(a==="unhide"){s.hidden=[];save();render();}else if(a==="reset"){s={...base,setup:true};save();page="home";render();}
- else if(a==="kernel"){page="kernel";render();let i=await window.anonixex.getSystemInfo();$("#sys-title").textContent=i.type+" "+i.release;$("#sys-info").innerHTML="Architecture: "+esc(i.arch)+"<br>CPU: "+esc(i.cpu)+"<br>CPU cores: "+i.cores+"<br>Memory: "+i.memory+"<br>Device: "+esc(i.hostname);}
+ const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.page){page=b.dataset.page;state.islandOpen=false;render();return;}
+ if(b.dataset.accent!==undefined){state.accent=+b.dataset.accent;save();render();return;}
+ if(b.dataset.toggle){state[b.dataset.toggle]=!state[b.dataset.toggle];save();render();return;}
+ if(b.dataset.launch){const err=await window.anonixex.launchApp(b.dataset.launch);if(err)terminalHistory.push("Launch failed: "+err);return;}
+ if(b.dataset.link){const ok=await window.anonixex.openLink(b.dataset.link);if(!ok)alert("Enter a valid http or https link in Studio.");return;}
+ if(b.dataset.action){const a=b.dataset.action;
+ if(a==="next"){if(step<3){step++;render();}else{state.setup=true;save();page="home";render();}}
+ else if(a==="back"){step=Math.max(0,step-1);render();}
+ else if(a==="wallpaper")await chooseWallpaper();
+ else if(a==="remove-wallpaper"){state.wallpaper="";save();document.querySelector(".phone").style.backgroundImage="";render();}
+ else if(a==="save-island"){state.favorite=$("#favorite").value;state.islandUrl=$("#island-url").value.trim();if(state.islandUrl&&!/^https?:\/\//i.test(state.islandUrl)){alert("Quick link must begin with http:// or https://");return;}save();render();}
  else if(a.startsWith("sys:"))window.anonixex.openSystem(a.slice(4));
  }
- if(b.dataset.accent!==undefined){s.accent=+b.dataset.accent;save();render();}
- if(b.dataset.toggle){s[b.dataset.toggle]=!s[b.dataset.toggle];save();render();}
- if(b.dataset.pin){let p=b.dataset.pin;s.favorites=s.favorites.includes(p)?s.favorites.filter(x=>x!==p):[...s.favorites,p];save();render();}
- if(b.dataset.hide){s.hidden.push(b.dataset.hide);s.favorites=s.favorites.filter(x=>x!==b.dataset.hide);save();render();}
- if(b.dataset.launch){let err=await window.anonixex.launchApp(b.dataset.launch);if(err)alert("Windows could not open this shortcut: "+err);}
 });
+document.addEventListener("dblclick",e=>{if(e.target.closest("#island")){state.islandOpen=!state.islandOpen;render();}});
 document.addEventListener("input",e=>{
- if(e.target.id==="home-search"||e.target.id==="app-search"){query=e.target.value;let id=e.target.id,pos=e.target.selectionStart;render();let n=$("#"+id);if(n){n.focus();n.setSelectionRange(pos,pos);}}
- if(e.target.dataset.slider){let k=e.target.dataset.slider;s[k]=+e.target.value;save();let b=e.target.parentElement.querySelector("b");if(b)b.textContent=s[k]+(k==="textScale"?"%":"");}
+ if(e.target.id==="search"){query=e.target.value;const pos=e.target.selectionStart;render();const n=$("#search");if(n){n.focus();n.setSelectionRange(pos,pos);}return;}
+ if(e.target.dataset.range){state[e.target.dataset.range]=+e.target.value;save();const k=e.target.dataset.range;const el=$("#v-"+k);if(el)el.textContent=state[k]+(k==="blur"||k==="radius"||k==="iconSize"?"px":k==="opacity"||k==="glass"||k==="textScale"?"%":"");}
 });
-(async()=>{try{apps=await window.anonixex.getApps();}catch(e){apps=[];}render();setInterval(()=>{if(page==="home")clock();},1000);})();
+document.addEventListener("submit",e=>{if(e.target.id==="term-form"){e.preventDefault();const raw=$("#term-input").value;terminalHistory.push("anonixex $ "+raw);runCommand(raw);}});
+let touchY=0;document.addEventListener("touchstart",e=>{touchY=e.touches[0].clientY;},{passive:true});document.addEventListener("touchend",e=>{const dy=touchY-e.changedTouches[0].clientY;if(dy>85&&page==="home"){page="library";query="";render();}},{passive:true});
+(async()=>{try{apps=await window.anonixex.getApps();}catch{}render();setInterval(updateClock,1000);if(state.wallpaper){const p=document.querySelector(".phone");if(p)p.style.backgroundImage='linear-gradient(#060a14aa,#060a14bb),url("'+state.wallpaper+'")';}})();
