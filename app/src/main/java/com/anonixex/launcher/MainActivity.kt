@@ -749,7 +749,7 @@ class MainActivity : Activity() {
             GradientDrawable.Orientation.TOP_BOTTOM,
             intArrayOf(top, bottom)
         ).apply {
-            cornerRadius = dp(cornerRadius).toFloat()
+            setCornerRadius(dp(cornerRadius).toFloat())
             setStroke(dp(1), Color.argb(if (glassMode) 24 else 12, 255, 255, 255))
         }
     }
