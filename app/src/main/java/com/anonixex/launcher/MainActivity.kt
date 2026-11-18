@@ -31,13 +31,13 @@ import android.widget.Toast
 
 class MainActivity : Activity() {
     private val prefs by lazy { getSharedPreferences("anonixex", MODE_PRIVATE) }
-    private val bg = Color.rgb(7, 9, 16)
-    private val glass = Color.argb(174, 27, 34, 49)
-    private val glassBright = Color.argb(205, 42, 52, 72)
-    private val muted = Color.rgb(157, 170, 191)
-    private val white = Color.rgb(244, 247, 255)
+    private val bg = Color.rgb(5, 5, 5)
+    private val glass = Color.rgb(25, 25, 25)
+    private val glassBright = Color.rgb(43, 43, 43)
+    private val muted = Color.rgb(168, 168, 168)
+    private val white = Color.rgb(248, 248, 248)
     private val accents = intArrayOf(
-        Color.rgb(119, 224, 255), Color.rgb(180, 145, 255),
+        Color.rgb(138, 180, 248), Color.rgb(180, 145, 255),
         Color.rgb(120, 245, 194), Color.rgb(255, 171, 135),
         Color.rgb(255, 213, 119), Color.rgb(244, 133, 190),
         Color.rgb(226, 235, 255), Color.rgb(160, 190, 255)
@@ -206,64 +206,101 @@ class MainActivity : Activity() {
         launcherHomeVisible = true
         root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(17), dp(23), dp(17), dp(11))
+            setPadding(dp(20), dp(22), dp(20), dp(10))
             background = backgroundGradient()
         }
-        val scroll = ScrollView(this).apply { clipToPadding = false; isFillViewport = false }
-        val content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        val header = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        val brand = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        brand.addView(label("A N O N I X E X", 10f, accent, true))
-        brand.addView(label("Good to see you.", 26f, white, true).apply { setPadding(0, dp(3), 0, 0) })
+
+        val scroll = ScrollView(this).apply {
+            clipToPadding = false
+            isFillViewport = false
+        }
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val brand = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        brand.addView(label("ANONIXEX", 10f, accent, true))
+        brand.addView(label("Welcome back.", 29f, white, true).apply {
+            setPadding(0, dp(4), 0, 0)
+        })
         header.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
-        header.addView(actionButton("◉", glass, white) { showControlCenter() }, LinearLayout.LayoutParams(dp(48), dp(46)).apply { rightMargin = dp(6) })
-        header.addView(actionButton("⚙", glass, white) { showSettings() }, LinearLayout.LayoutParams(dp(48), dp(46)))
+        header.addView(actionButton("⌗", glass, white) {
+            showControlCenter()
+        }, LinearLayout.LayoutParams(dp(48), dp(48)).apply {
+            rightMargin = dp(7)
+        })
+        header.addView(actionButton("⚙", glass, white) {
+            showSettings()
+        }, LinearLayout.LayoutParams(dp(48), dp(48)))
         content.addView(header)
+
         addDynamicIsland(root)
 
         if (showClock) {
-            val clock = glassCard().apply { setPadding(dp(18), dp(14), dp(18), dp(14)) }
+            val clock = glassCard().apply {
+                setPadding(dp(20), dp(18), dp(20), dp(18))
+            }
+            clock.addView(label("TODAY", 9f, muted, true))
             clock.addView(TextClock(this).apply {
                 format12Hour = "h:mm"
                 format24Hour = "HH:mm"
-                textSize = 42f
+                textSize = 52f
                 setTextColor(white)
                 typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+                includeFontPadding = false
+            }.apply {
+                setPadding(0, dp(3), 0, 0)
             })
             clock.addView(TextClock(this).apply {
-                format12Hour = "EEEE  ·  d MMMM"
-                format24Hour = "EEEE  ·  d MMMM"
-                textSize = 12f
+                format12Hour = "EEEE, d MMMM"
+                format24Hour = "EEEE, d MMMM"
+                textSize = 13f
                 setTextColor(muted)
             })
-            content.addView(clock, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(19) })
+            content.addView(clock, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(18)
+            })
         }
 
         if (showSearch) {
             val searchPanel = glassCard().apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(13), 0, dp(12), 0)
+                setPadding(dp(15), 0, dp(14), 0)
             }
-            searchPanel.addView(label("⌕", 25f, accent, false), LinearLayout.LayoutParams(dp(31), dp(50)))
+            searchPanel.addView(label("⌕", 25f, muted, false), LinearLayout.LayoutParams(dp(32), dp(54)))
             search = EditText(this).apply {
                 hint = "Search apps"
-                textSize = 14f * fontScale / 100f
+                textSize = 15f * fontScale / 100f
                 setSingleLine(true)
                 setTextColor(white)
                 setHintTextColor(muted)
                 background = null
                 addTextChangedListener(SimpleTextWatcher { renderApps(it) })
             }
-            searchPanel.addView(search, LinearLayout.LayoutParams(0, dp(50), 1f))
-            searchPanel.addView(label("⌘", 16f, muted, true))
-            content.addView(searchPanel, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) })
+            searchPanel.addView(search, LinearLayout.LayoutParams(0, dp(54), 1f))
+            content.addView(searchPanel, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(13)
+            })
         }
 
-        val favHeader = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        favHeader.addView(label("PINNED", 10f, muted, true), LinearLayout.LayoutParams(0, -2, 1f))
+        val favHeader = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        favHeader.addView(label("FAVOURITES", 11f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
         favHeader.addView(label("Hold an app to edit", 10f, muted, false))
-        content.addView(favHeader, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(22); bottomMargin = dp(9) })
+        content.addView(favHeader, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(24)
+            bottomMargin = dp(11)
+        })
+
         favoriteDock = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -271,11 +308,23 @@ class MainActivity : Activity() {
         content.addView(favoriteDock)
         renderFavorites()
 
-        val appHeader = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        appHeader.addView(label("APP LIBRARY", 10f, muted, true), LinearLayout.LayoutParams(0, -2, 1f))
-        appHeader.addView(actionButton("All apps  ↗", glass, white) { showAppLibrary() }, LinearLayout.LayoutParams(-2, dp(38)))
-        content.addView(appHeader, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(23); bottomMargin = dp(9) })
-        appGrid = GridLayout(this).apply { alignmentMode = GridLayout.ALIGN_BOUNDS; useDefaultMargins = false }
+        val appHeader = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        appHeader.addView(label("APP LIBRARY", 11f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
+        appHeader.addView(actionButton("See all  ›", glass, white) {
+            showAppLibrary()
+        }, LinearLayout.LayoutParams(-2, dp(39)))
+        content.addView(appHeader, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(25)
+            bottomMargin = dp(10)
+        })
+
+        appGrid = GridLayout(this).apply {
+            alignmentMode = GridLayout.ALIGN_BOUNDS
+            useDefaultMargins = false
+        }
         content.addView(appGrid)
         scroll.addView(content)
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -283,14 +332,27 @@ class MainActivity : Activity() {
         val bottom = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            background = glassCardBackground()
+            background = rounded(Color.rgb(24, 24, 24), dp(24))
             setPadding(dp(7), dp(6), dp(7), dp(6))
         }
-        bottom.addView(actionButton("Home", glassBright, white) { buildHome() }, LinearLayout.LayoutParams(0, dp(44), 1f))
-        bottom.addView(actionButton("Apps", glass, white) { showAppLibrary() }, LinearLayout.LayoutParams(0, dp(44), 1f).apply { leftMargin = dp(5) })
-        bottom.addView(actionButton("Studio", accent, bg) { showSettings() }, LinearLayout.LayoutParams(0, dp(44), 1f).apply { leftMargin = dp(5) })
-        root.addView(bottom, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(9) })
-        val signature = label("made by hacer62828", 8f, Color.argb(85, 220, 230, 245), false).apply {
+        bottom.addView(actionButton("Home", glassBright, white) {
+            buildHome()
+        }, LinearLayout.LayoutParams(0, dp(46), 1f))
+        bottom.addView(actionButton("Apps", glass, white) {
+            showAppLibrary()
+        }, LinearLayout.LayoutParams(0, dp(46), 1f).apply {
+            leftMargin = dp(5)
+        })
+        bottom.addView(actionButton("Settings", glass, white) {
+            showSettings()
+        }, LinearLayout.LayoutParams(0, dp(46), 1f).apply {
+            leftMargin = dp(5)
+        })
+        root.addView(bottom, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(9)
+        })
+
+        val signature = label("made by hacer62828", 8f, Color.argb(85, 220, 220, 220), false).apply {
             gravity = Gravity.END
             setPadding(0, dp(3), dp(3), 0)
         }
@@ -421,8 +483,8 @@ class MainActivity : Activity() {
             setPadding(dp(18), dp(25), dp(18), dp(14))
             background = backgroundGradient()
         }
-        page.addView(label("ANONIXEX  /  LIBRARY", 10f, accent, true))
-        page.addView(label("Your apps.", 29f, white, true).apply { setPadding(0, dp(5), 0, dp(15)) })
+        page.addView(label("ANONIXEX  /  APPS", 10f, accent, true))
+        page.addView(label("Apps", 31f, white, true).apply { setPadding(0, dp(5), 0, dp(15)) })
         val input = EditText(this).apply {
             hint = "Search your phone"
             setTextColor(white)
@@ -556,8 +618,8 @@ class MainActivity : Activity() {
             setPadding(dp(19), dp(25), dp(19), dp(14))
             background = backgroundGradient()
         }
-        page.addView(label("ANONIXEX STUDIO", 10f, accent, true))
-        page.addView(label("Make it yours.", 29f, white, true).apply { setPadding(0, dp(4), 0, dp(15)) })
+        page.addView(label("ANONIXEX  /  SETTINGS", 10f, accent, true))
+        page.addView(label("Settings", 31f, white, true).apply { setPadding(0, dp(4), 0, dp(15)) })
         val scroll = ScrollView(this)
         val settings = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val look = glassCard()
@@ -651,37 +713,97 @@ class MainActivity : Activity() {
         launcherHomeVisible = false
         val page = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(27), dp(20), dp(16))
+            setPadding(dp(20), dp(25), dp(20), dp(16))
             background = backgroundGradient()
         }
-        page.addView(label("ANONIXEX  /  CONTROL", 10f, accent, true))
-        page.addView(label("Control center.", 29f, white, true).apply { setPadding(0, dp(5), 0, dp(8)) })
+        page.addView(label("ANONIXEX  /  QUICK PANEL", 10f, accent, true))
+        page.addView(label("Quick settings", 31f, white, true).apply {
+            setPadding(0, dp(5), 0, dp(4))
+        })
         page.addView(TextClock(this).apply {
             format12Hour = "h:mm  ·  EEEE, d MMMM"
             format24Hour = "HH:mm  ·  EEEE, d MMMM"
-            textSize = 15f
+            textSize = 14f
             setTextColor(muted)
         })
+
         val scroll = ScrollView(this)
-        val controls = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val controls = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+
         val connectivity = glassCard()
         connectivity.addView(label("CONNECTIVITY", 10f, accent, true))
-        connectivity.addView(actionButton("Wi-Fi & networks", glassBright, white) { startActivity(Intent(Settings.ACTION_WIFI_SETTINGS)) })
-        connectivity.addView(actionButton("Bluetooth & connected devices", glass, white) { startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) })
-        connectivity.addView(actionButton("Airplane mode settings", glass, white) { startActivity(Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS)) })
-        connectivity.addView(actionButton("Location", glass, white) { startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) })
+        val tiles = GridLayout(this).apply {
+            columnCount = 2
+            useDefaultMargins = false
+        }
+        fun addTile(title: String, subtitle: String, action: () -> Unit) {
+            val tile = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(14), dp(13), dp(10), dp(12))
+                background = rounded(glassBright, dp(20))
+                setOnClickListener { action() }
+                addView(label(title, 14f, white, true))
+                addView(label(subtitle, 10f, muted, false).apply {
+                    setPadding(0, dp(3), 0, 0)
+                })
+            }
+            tiles.addView(tile, GridLayout.LayoutParams().apply {
+                width = 0
+                height = dp(76)
+                columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
+                setMargins(dp(3), dp(5), dp(3), dp(5))
+            })
+        }
+        addTile("Wi-Fi", "Networks") {
+            startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
+        }
+        addTile("Bluetooth", "Connected devices") {
+            startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+        }
+        addTile("Airplane mode", "Wireless settings") {
+            startActivity(Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS))
+        }
+        addTile("Location", "Location settings") {
+            startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+        }
+        connectivity.addView(tiles, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(8)
+        })
         controls.addView(connectivity)
+
         val device = glassCard()
         device.addView(label("DEVICE", 10f, accent, true))
-        device.addView(actionButton("Brightness & display", glass, white) { startActivity(Intent(Settings.ACTION_DISPLAY_SETTINGS)) })
-        device.addView(actionButton("Sound & Do Not Disturb", glass, white) { startActivity(Intent(Settings.ACTION_SOUND_SETTINGS)) })
-        device.addView(actionButton("Battery & power", glass, white) { startActivity(Intent(Intent.ACTION_POWER_USAGE_SUMMARY)) })
-        device.addView(actionButton("Notifications", glass, white) { startActivity(Intent("android.settings.NOTIFICATION_SETTINGS")) })
-        device.addView(actionButton("Privacy & security", glass, white) { startActivity(Intent(Settings.ACTION_PRIVACY_SETTINGS)) })
-        controls.addView(device, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
+        device.addView(actionButton("Brightness & display", glassBright, white) {
+            startActivity(Intent(Settings.ACTION_DISPLAY_SETTINGS))
+        })
+        device.addView(actionButton("Sound & vibration", glass, white) {
+            startActivity(Intent(Settings.ACTION_SOUND_SETTINGS))
+        })
+        device.addView(actionButton("Battery & power", glass, white) {
+            startActivity(Intent(Intent.ACTION_POWER_USAGE_SUMMARY))
+        })
+        device.addView(actionButton("Notifications", glass, white) {
+            startActivity(Intent("android.settings.NOTIFICATION_SETTINGS"))
+        })
+        device.addView(actionButton("Privacy & security", glass, white) {
+            startActivity(Intent(Settings.ACTION_PRIVACY_SETTINGS))
+        })
+        controls.addView(device, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(12)
+        })
+
         scroll.addView(controls)
-        page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f).apply { topMargin = dp(15) })
-        page.addView(actionButton("Done", accent, bg) { buildHome() })
+        page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f).apply {
+            topMargin = dp(17)
+        })
+        page.addView(actionButton("Done", accent, bg) {
+            buildHome()
+        }, LinearLayout.LayoutParams(-1, dp(50)).apply {
+            topMargin = dp(10)
+        })
         setContentView(page)
     }
 
@@ -830,19 +952,19 @@ class MainActivity : Activity() {
     }
 
     private fun glassCardBackground(): GradientDrawable {
-        val fill = if (glassMode) Color.argb((glassOpacity * 2.35f).toInt().coerceIn(60, 235), 31, 42, 61) else Color.rgb(24, 29, 40)
+        val fill = if (glassMode) Color.argb((glassOpacity * 2.35f).toInt().coerceIn(60, 235), 31, 31, 31) else Color.rgb(24, 24, 24)
         return GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
-            intArrayOf(fill, Color.argb(190, 21, 27, 40))
+            intArrayOf(fill, Color.argb(205, 15, 15, 15))
         ).apply {
             cornerRadius = dp(this@MainActivity.cornerRadius).toFloat()
-            setStroke(dp(1), Color.argb(if (glassMode) 145 else 35, 220, 236, 255))
+            setStroke(dp(1), Color.argb(if (glassMode) 75 else 35, 220, 220, 220))
         }
     }
 
     private fun backgroundGradient() = GradientDrawable(
         GradientDrawable.Orientation.TL_BR,
-        intArrayOf(Color.rgb(8, 13, 25), Color.rgb(17, 19, 36), Color.rgb(7, 9, 16))
+        intArrayOf(Color.rgb(5, 5, 5), Color.rgb(13, 13, 13), Color.rgb(5, 5, 5))
     )
 
     private fun label(value: String, size: Float, color: Int, bold: Boolean) = TextView(this).apply {
